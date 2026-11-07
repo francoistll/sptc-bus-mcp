@@ -1,4 +1,4 @@
-import { seychellesNow, stopNames, findStops, nextDepartures, transferDepartures, lineTimetable, minutesBetween, VALID_FR, VALID_EN } from '../_lib/query.js';
+import { seychellesNow, stopNames, routesServing, findStops, nextDepartures, transferDepartures, lineTimetable, minutesBetween, VALID_FR, VALID_EN } from '../_lib/query.js';
 import { parseQuestion } from '../_lib/parse.js';
 
 const json = (o, status = 200) =>
@@ -48,7 +48,7 @@ async function handle({ request, env }, emit = () => {}) {
   const base = { ok: true, via, ms, parsed, day, after, last, first, tomorrow: !!parsed.tomorrow, now: now.time, notice: { fr: VALID_FR, en: VALID_EN } };
 
   if (parsed.intent === 'next' && !parsed.depart && parsed.arrivee) {
-    const routes = (await db.prepare(`select distinct s.route from services s join trips t on t.service_id = s.id join stop_times a on a.trip_id = t.id and a.stop like ? escape '\\' order by s.route`).bind('%' + String(parsed.arrivee).replace(/[\\%_]/g, (c) => '\\' + c) + '%').all()).results.map((x) => x.route);
+    const routes = await routesServing(db, parsed.arrivee);
     return json({ ...base, intent: 'need_from', arrivee: parsed.arrivee, routes });
   }
   if (parsed.intent === 'next' && parsed.depart) {
