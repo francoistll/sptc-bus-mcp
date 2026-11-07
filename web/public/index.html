@@ -4,8 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#075985">
-<title>Bus Seychelles — horaires SPTC (non officiel)</title>
-<meta name="description" content="Interrogez les horaires des bus de Mahé (SPTC) en langage naturel. Intégration non officielle.">
+<title>Horaires des bus Seychelles (Mahé, SPTC) — prochain bus, lignes et arrêts</title>
+<meta name="description" content="Horaires des bus de Mahé (Seychelles) : demandez « prochain bus de Victoria à Beau Vallon » en langage naturel. Lignes, arrêts et horaires SPTC, août 2026. Service non officiel, gratuit.">
+<meta name="robots" content="index, follow, max-snippet:-1">
+<link rel="canonical" href="https://bus-seychelles.pages.dev/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Bus Seychelles">
+<meta property="og:title" content="Horaires des bus Seychelles (Mahé, SPTC)">
+<meta property="og:description" content="Prochain bus, horaires par ligne et arrêts de Mahé, en une question. Service non officiel, horaires SPTC théoriques.">
+<meta property="og:url" content="https://bus-seychelles.pages.dev/">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:locale:alternate" content="en_GB">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Horaires des bus Seychelles (Mahé, SPTC)">
+<meta name="twitter:description" content="Prochain bus, lignes et arrêts de Mahé. Service non officiel.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Bus Seychelles","alternateName":["Seychelles bus timetable","Horaires bus Mahé SPTC"],"url":"https://bus-seychelles.pages.dev/","description":"Horaires théoriques des bus SPTC de Mahé (Seychelles) interrogeables en langage naturel. Service non officiel, non affilié à la SPTC.","applicationCategory":"TravelApplication","operatingSystem":"Any","inLanguage":["fr","en"],"isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"areaServed":{"@type":"Place","name":"Mahé, Seychelles"}}</script>
 <link rel="icon" href="logo.svg" type="image/svg+xml">
 <style>
   :root { --ink:#0f172a; --sea:#0891b2; --deep:#075985; --sun:#f59e0b; --coral:#ea580c; --sand:#fffbeb; --card:#ffffffee; }
@@ -88,7 +101,7 @@
 </style>
 </head>
 <body>
-<div class="banner" data-i="banner"></div>
+<div class="banner" data-i="banner">⚠️ <b>Service non officiel</b> : cette page n’est ni éditée ni approuvée par la SPTC. Horaires théoriques, sans temps réel.</div>
 
 <header class="hero">
   <div class="nav">
@@ -99,36 +112,60 @@
     <button id="lang" type="button" aria-label="Language">EN</button>
   </div>
   <div class="hero-txt">
-    <h1 data-i="title"></h1>
-    <p data-i="subtitle"></p>
+    <h1 data-i="title">Les bus de Mahé, en une question</h1>
+    <p data-i="subtitle">Posez votre question en langage naturel : « prochain bus de Victoria à Beau Vallon ».</p>
   </div>
 </header>
 
 <main>
   <div class="card">
-    <label for="q" class="hint" data-i="label"></label>
+    <label for="q" class="hint" data-i="label">Votre question</label>
     <textarea id="q" maxlength="300" data-iph="placeholder"></textarea>
     <div class="row">
-      <button class="btn" id="go" type="button" data-i="go"></button>
-      <span class="hint" data-i="hint"></span>
+      <button class="btn" id="go" type="button" data-i="go">Chercher</button>
+      <span class="hint" data-i="hint">Heure des Seychelles (UTC+4) par défaut</span>
     </div>
     <div class="chips" id="chips"></div>
     <div id="out" aria-live="polite"></div>
   </div>
 
   <section class="card doc" id="docs">
-    <h2 data-i="docsTitle"></h2>
-    <div data-i-html="docsBody"></div>
+    <h2 data-i="docsTitle">À propos de ce service</h2>
+    <div data-i-html="docsBody">
+    <div class="two"><div>
+      <h3>Comment ça marche</h3>
+      <ol>
+        <li>Une IA gratuite (Cloudflare Workers AI) <b>comprend votre phrase</b> et en extrait : départ, arrivée, heure, jour, ligne.</li>
+        <li>Un programme classique <b>interroge la base d’horaires</b> issue des PDF officiels.</li>
+        <li>La réponse est affichée telle quelle : <b>l’IA n’invente jamais un horaire</b>.</li>
+      </ol>
+      <p>Si le quota gratuit de l’IA est épuisé, des règles simples prennent le relais (« de X à Y », « ligne 20 »).</p>
+    </div><div>
+      <h3>Exemples de phrases</h3>
+      <ul><li><code>prochain bus de Victoria à Beau Vallon</code></li><li><code>de Beau Vallon à Victoria vers 17h30</code></li><li><code>horaires ligne 24A samedi</code></li><li><code>arrêt Glacis</code></li></ul>
+      <h3>Limites</h3>
+      <ul><li>Pas de temps réel (retards, annulations).</li><li>Trajets directs seulement, pas de correspondances.</li><li>Positions GPS partielles des arrêts.</li></ul>
+    </div></div></div>
   </section>
 
   <section class="card doc" id="source">
-    <h2 data-i="srcTitle"></h2>
-    <div data-i-html="srcBody"></div>
+    <h2 data-i="srcTitle">D’où viennent les données ?</h2>
+    <div data-i-html="srcBody">
+    <p class="warn"><b>Intégration non officielle.</b> Ce site n’est pas affilié à la Seychelles Public Transport Corporation (SPTC). En cas de doute, fiez-vous aux horaires affichés aux arrêts ou sur le site officiel.</p>
+    <p>Les horaires proviennent des <b>PDF officiels de la SPTC</b>, valables au <b>4 août 2026</b>, publiés sur
+      <a href="https://sptc.sc/timetable/" rel="noopener">sptc.sc/timetable</a> :</p>
+    <ul>
+      <li><a href="https://sptc.sc/wp-content/uploads/2026/08/SPTC_Weekday_Timetable_August_2026_Updated.pdf" rel="noopener">Horaires de semaine (PDF)</a></li>
+      <li><a href="https://sptc.sc/wp-content/uploads/2026/08/SPTC_Weekend_Timetable_July_2026.pdf" rel="noopener">Horaires de week-end (PDF)</a></li>
+    </ul>
+    <p>La SPTC ne publie ni flux GTFS ni API : les tableaux de ces PDF ont été extraits automatiquement (pdfplumber), nettoyés, puis rangés dans une base SQLite. Cette extraction peut comporter des erreurs.</p>
+    <p>Les positions des arrêts, quand elles existent, viennent d’<a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> (© contributeurs, licence ODbL) et sont souvent approximatives.</p>
+    <p>Si vous êtes de la SPTC et souhaitez retirer ou corriger ces données, contactez l’auteur du site.</p></div>
   </section>
 </main>
 
 <footer>
-  <div data-i-html="footer"></div>
+  <div data-i-html="footer">Bus Seychelles · intégration non officielle · données © SPTC (horaires), © OpenStreetMap (positions)</div>
 </footer>
 
 <script>
