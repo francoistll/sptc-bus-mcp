@@ -97,23 +97,74 @@ export async function nextDepartures(db, { depart, arrivee, after, day, limit = 
   return last ? r.results.reverse() : r.results;
 }
 
+// Horaire complet (stop_times + trips + services, ~11 000 lignes), lu une fois puis gardé 24 h (mémoire + Cache API).
+// Les correspondances se calculent en mémoire : la jointure SQL équivalente lisait ~150 000 lignes D1 par question.
+async function timetable(db) {
+  const raw = await cached('timetable:v1', 86400, async () => {
+    const [st, tr, sv] = await Promise.all([
+      db.prepare("select trip_id, seq, stop, time from stop_times where stop != ''").all(),
+      db.prepare('select id, service_id from trips').all(),
+      db.prepare('select id, route, day_type from services').all(),
+    ]);
+    return { st: st.results.map((x) => [x.trip_id, x.seq, x.stop, x.time]), tr: tr.results.map((x) => [x.id, x.service_id]), sv: sv.results.map((x) => [x.id, x.route, x.day_type]) };
+  });
+  if (raw._idx) return raw._idx;
+  const svc = new Map(raw.sv.map((x) => [x[0], { route: x[1], day: x[2] }]));
+  const trip = new Map(raw.tr.map((x) => [x[0], svc.get(x[1])]));
+  const byTrip = new Map(), byStop = new Map();
+  for (const [t, seq, stop, time] of raw.st) {
+    const r = { t, seq, stop, time };
+    if (!byTrip.has(t)) byTrip.set(t, []);
+    byTrip.get(t).push(r);
+    if (!byStop.has(stop)) byStop.set(stop, []);
+    byStop.get(stop).push(r);
+  }
+  for (const l of byTrip.values()) l.sort((u, v) => u.seq - v.seq);
+  const idx = { trip, byTrip, byStop };
+  Object.defineProperty(raw, '_idx', { value: idx, enumerable: false });
+  return idx;
+}
+const toMin = (x) => (/^\d{1,2}:\d{2}$/.test(x || '') ? +x.slice(0, x.indexOf(':')) * 60 + +x.slice(-2) : null);
+
 // Une correspondance : bus 1 de `depart` jusqu'à un arrêt commun X, puis bus 2 de X jusqu'à `arrivee`
-// (au moins 3 min de battement). Un résultat par 2e bus.
+// (plus de 3 min de battement). Un résultat par 2e bus.
 export async function transferDepartures(db, { depart, arrivee, after, day, limit = 5 }) {
-  const dep = (await resolveStops(db, depart)).map((x) => x.stop);
-  const arr = (await resolveStops(db, arrivee)).map((x) => x.stop);
-  if (!dep.length || !arr.length) return [];
-  const sql = `select s1.route r1, t1.id trip1, a.stop sa, a.time ta, b.stop sx, b.time tx1,
-      s2.route r2, t2.id trip2, c.time tx2, d.stop sb, d.time tb
-    from stop_times a
-    join trips t1 on t1.id = a.trip_id join services s1 on s1.id = t1.service_id and s1.day_type = ?
-    join stop_times b on b.trip_id = t1.id and b.seq > a.seq
-    join stop_times c on c.stop = b.stop and c.trip_id != t1.id and c.time >= time(b.time, '+3 minutes')
-    join trips t2 on t2.id = c.trip_id join services s2 on s2.id = t2.service_id and s2.day_type = ?
-    join stop_times d on d.trip_id = t2.id and d.seq > c.seq and d.stop in (${marks(arr.length)})
-    where a.stop in (${marks(dep.length)}) and a.time >= ? and b.stop != '' and b.stop not in (${marks(arr.length)})
-    order by a.time, d.time limit 600`;
-  const r = await db.prepare(sql).bind(day, day, ...arr, ...dep, after, ...arr).all();
+  const dep = new Set((await resolveStops(db, depart)).map((x) => x.stop));
+  const arr = new Set((await resolveStops(db, arrivee)).map((x) => x.stop));
+  if (!dep.size || !arr.size) return [];
+  const { trip, byTrip, byStop } = await timetable(db);
+  // Bus 2 possibles : trajets du bon type de jour qui atteignent l'arrivée (arrêts d'arrivée d, par trajet).
+  const dByTrip = new Map();
+  for (const st of arr) for (const d of byStop.get(st) || []) {
+    if (trip.get(d.t)?.day !== day) continue;
+    if (!dByTrip.has(d.t)) dByTrip.set(d.t, []);
+    dByTrip.get(d.t).push(d);
+  }
+  // Bus 1 : à chaque arrêt X atteint après le départ (hors arrivée), le bus pris et l'heure d'arrivée en X.
+  const bByStop = new Map();
+  for (const sa of dep) for (const a of byStop.get(sa) || []) {
+    if (a.time < after || trip.get(a.t)?.day !== day) continue;
+    for (const b of byTrip.get(a.t)) {
+      if (b.seq <= a.seq || arr.has(b.stop) || toMin(b.time) === null) continue;
+      if (!bByStop.has(b.stop)) bByStop.set(b.stop, []);
+      bByStop.get(b.stop).push({ a, b });
+    }
+  }
+  const rows = [];
+  for (const [t2, ds] of dByTrip) {
+    for (const c of byTrip.get(t2)) {
+      const bl = bByStop.get(c.stop);
+      const cm = toMin(c.time);
+      if (!bl || cm === null) continue;
+      for (const { a, b } of bl) {
+        if (a.t === t2 || cm <= toMin(b.time) + 3) continue;
+        for (const d of ds) if (d.seq > c.seq)
+          rows.push({ r1: trip.get(a.t).route, trip1: a.t, sa: a.stop, ta: a.time, sx: b.stop, tx1: b.time, r2: trip.get(t2).route, trip2: t2, tx2: c.time, sb: d.stop, tb: d.time });
+      }
+    }
+  }
+  rows.sort((u, v) => (u.ta < v.ta ? -1 : u.ta > v.ta ? 1 : u.tb < v.tb ? -1 : u.tb > v.tb ? 1 : 0));
+  const r = { results: rows.slice(0, 600) };
   const best = new Map();
   for (const x of r.results) {
     const k = x.trip2; // un seul résultat par 2e bus : le dernier bus 1 qui permet encore la correspondance
