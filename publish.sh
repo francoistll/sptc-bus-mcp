@@ -7,7 +7,7 @@ cd "$(dirname "$0")"
 gh auth status >/dev/null 2>&1 || gh auth login --hostname github.com --git-protocol https --web
 USER=$(gh api user --jq .login)
 # Lien « Code source » dans le site
-sed -i "s#^const REPO = '';#const REPO = 'https://github.com/${USER}/sptc-bus-mcp';#" web/public/index.html
+perl -pi -e "s#^const REPO = '';#const REPO = 'https://github.com/${USER}/sptc-bus-mcp';#" web/public/index.html
 git add -A
 git -c user.name="$USER" -c user.email="${USER}@users.noreply.github.com" commit -qm "Site web Cloudflare, documentation et lien du dépôt" || true
 gh repo create sptc-bus-mcp --public --source=. --remote=origin --push \

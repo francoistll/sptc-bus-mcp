@@ -19,16 +19,16 @@ export function parseByRules(q) {
   else if (/semaine|lundi|mardi|mercredi|jeudi|vendredi|weekday|monday|tuesday|wednesday|thursday|friday/i.test(t)) out.day = 'weekday';
   const hm = t.match(/\b(\d{1,2})\s*(?:h|:)\s*(\d{2})?\b/i);
   if (hm && +hm[1] < 24) out.time = `${hm[1].padStart(2, '0')}:${hm[2] || '00'}`;
-  const ft = t.match(/(?:de|depuis|from)\s+(.+?)\s+(?:à|a|au|aux|vers|pour|to|->|→)\s+(.+?)(?:\s+(?:vers|à partir|apres|après|after|around|at|le|la|ce|ce soir|demain)\b|[?.,;]|\s+\d{1,2}\s*[h:]|$)/i);
+  const ft = t.match(/(?<![\wÀ-ÿ])(?:de|depuis|from)\s+(.+?)\s+(?:à|a|au|aux|vers|pour|to|->|→)\s+(.+?)(?:\s+(?:vers|à partir|apres|après|after|around|at|le|la|ce|ce soir|demain)\b|[?.,;]|\s+\d{1,2}\s*[h:]|$)/i);
   if (ft) {
     out.intent = 'next'; out.depart = clean(ft[1]); out.arrivee = clean(ft[2]);
     return out;
   }
   const ln = t.match(/(?:ligne|line|route|bus)\s*n?°?\s*([0-9]{1,2}[A-Za-z]?)/i);
   if (ln) { out.intent = 'line'; out.route = ln[1].toUpperCase(); return out; }
-  const fromOnly = t.match(/(?:depuis|de|from|at|à|a)\s+([A-Za-zÀ-ÿ' .-]{3,40}?)(?:[?.,;]|\s+\d|$)/i);
+  const fromOnly = t.match(/(?<![\wÀ-ÿ])(?:depuis|de|from|at|à|a)\s+([A-Za-zÀ-ÿ' .-]{3,40}?)(?:[?.,;]|\s+\d|$)/i);
   if (fromOnly) { out.intent = 'next'; out.depart = clean(fromOnly[1]); return out; }
-  out.intent = 'stop'; out.query = clean(t);
+  out.intent = 'stop'; out.query = clean(t.replace(/^(?:l'|un |le |les )?(?:arr[êe]ts?|stops?)\s+(?:de |du |d'|of )?/i, ''));
   return out;
 }
 
