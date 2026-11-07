@@ -133,19 +133,33 @@ async function handle(env, m) {
 const reply = (body, status = 200) =>
   new Response(body == null ? null : JSON.stringify(body), { status, headers: { ...CORS, ...(body == null ? {} : { 'content-type': 'application/json; charset=utf-8' }), 'cache-control': 'no-store' } });
 
-export async function onRequest({ request, env }) {
+export async function onRequest({ request, env, waitUntil }) {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
   if (request.method !== 'POST') return new Response('Méthode non autorisée : ce serveur MCP accepte POST (Streamable HTTP, sans état).', { status: 405, headers: { ...CORS, allow: 'POST, OPTIONS' } });
-  if (limited(request.headers.get('cf-connecting-ip') || 'x')) return reply(rpcErr(null, -32000, 'rate_limit'), 429);
+  const ip = request.headers.get('cf-connecting-ip') || 'x';
+  // Journal des appels (IP, outil, arguments tronqués), 60 jours. Ne doit jamais faire échouer la requête.
+  const log = (m, status) => {
+    if (!env.DB || !m || typeof m.method !== 'string' || m.method === 'ping') return;
+    const a = m.params?.arguments ? JSON.stringify(m.params.arguments).slice(0, 200) : null;
+    const q = env.DB.prepare('insert into mcp_log values (?,?,?,?,?,?)')
+      .bind(new Date().toISOString(), ip, m.method, m.params?.name || null, a, status)
+      .run()
+      .then(() => (Math.random() < 0.02 ? env.DB.prepare("delete from mcp_log where ts < datetime('now','-60 days')").run() : null))
+      .catch(() => {});
+    if (waitUntil) waitUntil(q);
+  };
+  if (limited(ip)) { log({ method: 'rate_limited' }, '429'); return reply(rpcErr(null, -32000, 'rate_limit'), 429); }
   let raw;
   try { raw = await request.text(); if (raw.length > 20000) return reply(rpcErr(null, -32600, 'Request too large'), 413); } catch { return reply(rpcErr(null, -32700, 'Parse error'), 400); }
   let msg;
   try { msg = JSON.parse(raw); } catch { return reply(rpcErr(null, -32700, 'Parse error'), 400); }
   if (Array.isArray(msg)) {
     if (!msg.length || msg.length > 10) return reply(rpcErr(null, -32600, 'Invalid batch'), 400);
+    msg.forEach((m) => log(m, 'ok'));
     const res = (await Promise.all(msg.map((m) => handle(env, m)))).filter(Boolean);
     return res.length ? reply(res) : reply(null, 202);
   }
+  log(msg, 'ok');
   const res = await handle(env, msg);
   return res ? reply(res) : reply(null, 202);
 }
