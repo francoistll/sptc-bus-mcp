@@ -207,6 +207,17 @@ fr: {
   lastN: (n) => `${n} derniers passages de la journée`,
   tapHint: 'Touchez une ligne pour voir tous les arrêts du trajet.', tripLoading: 'Chargement du trajet…', tripErr: 'Détail indisponible.',
   board: 'Montée', alight: 'Descente', tripSum: (m, n) => `${m ? 'Trajet de ' + fmtDur(m) + ' · ' : ''}${n} arrêts`,
+  firstN: (n) => `${n} premiers passages de la journée`,
+  needFrom: (stop) => `Pour aller à « ${stop} », indiquez votre arrêt de départ, par exemple « de Victoria à ${stop} ».`,
+  routesAt: 'Lignes qui desservent cet arrêt :',
+  reasons: {
+    no_depart_stop: 'Je ne trouve pas cet arrêt de départ dans les horaires SPTC.',
+    no_arrivee_stop: 'Je ne trouve pas cet arrêt d’arrivée dans les horaires SPTC.',
+    no_direct: 'Pas de bus direct entre ces deux arrêts dans les horaires (une correspondance est peut-être nécessaire).',
+    none_after: 'Plus de départ après cette heure pour ce trajet. Essayez « premier bus » ou une autre heure.',
+  },
+  tomorrow: 'demain',
+  stopNone: 'Aucun arrêt de ce nom dans les horaires SPTC (le service ne couvre que Mahé).',
   none: 'Aucun passage trouvé. Essayez un autre arrêt ou une autre heure.',
   suggest: 'Arrêts proches de votre saisie :',
   unknown: 'Je n’ai pas compris. Essayez : « prochain bus de Victoria à Beau Vallon » ou « horaires de la ligne 20 ».',
@@ -258,6 +269,17 @@ en: {
   lastN: (n) => `Last ${n} departures of the day`,
   tapHint: 'Tap a row to see every stop of the trip.', tripLoading: 'Loading trip…', tripErr: 'Details unavailable.',
   board: 'Board', alight: 'Get off', tripSum: (m, n) => `${m ? 'Trip of ' + fmtDur(m) + ' · ' : ''}${n} stops`,
+  firstN: (n) => `First ${n} departures of the day`,
+  needFrom: (stop) => `To go to “${stop}”, tell me where you start, for example “from Victoria to ${stop}”.`,
+  routesAt: 'Routes serving this stop:',
+  reasons: {
+    no_depart_stop: 'I cannot find this departure stop in the SPTC timetable.',
+    no_arrivee_stop: 'I cannot find this arrival stop in the SPTC timetable.',
+    no_direct: 'No direct bus between these two stops in the timetable (a transfer may be needed).',
+    none_after: 'No more departures after that time for this trip. Try “first bus” or another time.',
+  },
+  tomorrow: 'tomorrow',
+  stopNone: 'No stop with that name in the SPTC timetable (the service covers Mahé only).',
   none: 'No departure found. Try another stop or time.',
   suggest: 'Stops similar to your input:',
   unknown: 'I did not understand. Try: “next bus from Victoria to Beau Vallon” or “timetable for route 20”.',
@@ -368,23 +390,26 @@ async function toggleTrip(tr, row, ncols) {
 
 function render(d) {
   const t = T[lang], out = $('#out'), nodes = [];
-  const meta = `${t.day[d.day]} · ${t.after} ${d.after} · ${t.via[d.via]} · ${d.notice[lang]}`;
+  const meta = `${d.tomorrow ? t.tomorrow + ' · ' : ''}${t.day[d.day]} · ${t.after} ${d.after} · ${t.via[d.via]} · ${d.notice[lang]}`;
   if (d.intent === 'next') {
     if (!d.rows.length) {
-      nodes.push(el('p', { textContent: t.none }));
+      nodes.push(el('p', { textContent: t.reasons[d.reason] || t.none }));
       if (d.suggestions?.length) nodes.push(el('p', { className: 'hint', textContent: t.suggest + ' ' + d.suggestions.join(', ') }));
     } else {
-      nodes.push(el('h3', { textContent: d.last ? t.lastN(d.rows.length) : t.next(d.rows.length) }), el('div', { className: 'meta', textContent: d.last ? meta.replace(/ · [^·]*\d\d:\d\d · /, ' · ') : meta }));
+      nodes.push(el('h3', { textContent: d.last ? t.lastN(d.rows.length) : d.first ? t.firstN(d.rows.length) : t.next(d.rows.length) }), el('div', { className: 'meta', textContent: d.last || d.first ? meta.replace(/ · [^·]*\d\d:\d\d · /, ' · ') : meta }));
       nodes.push(el('div', { className: 'meta', textContent: t.tapHint }));
       nodes.push(table(t.cNext, d.rows.map((r) => [r.ta, el('span', {}, el('span', { className: 'tag', textContent: r.route }), ' ', el('span', { className: 'hint', textContent: r.title.replace(/^Route\s+\S+\s*/i, '') })), r.sa, r.tb || '–', r.sb || '–', r.dur != null ? fmtDur(r.dur) : '–']), 'cards', d.rows));
     }
+  } else if (d.intent === 'need_from') {
+    nodes.push(el('p', { textContent: t.needFrom(d.arrivee) }));
+    if (d.routes?.length) nodes.push(el('p', {}, el('span', { className: 'hint', textContent: t.routesAt + ' ' }), d.routes.map((r) => el('span', {}, el('span', { className: 'tag', textContent: r }), ' '))));
   } else if (d.intent === 'line') {
     nodes.push(el('div', { className: 'meta', textContent: meta }));
     if (!d.tables.length) nodes.push(el('p', { textContent: t.none }));
     d.tables.forEach((x) => { nodes.push(el('h3', { textContent: x.title }), table(x.stops, x.rows)); });
   } else if (d.intent === 'stop') {
     nodes.push(el('h3', { textContent: t.stopsTitle }));
-    if (!d.stops.length) nodes.push(el('p', { textContent: t.none }));
+    if (!d.stops.length) nodes.push(el('p', { textContent: t.stopNone }));
     else nodes.push(el('ul', {}, d.stops.map((s) => el('li', {}, s.stop + ' ', s.lat != null ? el('span', { className: 'hint', textContent: `(${s.lat.toFixed(4)}, ${s.lon.toFixed(4)}${s.quality === 'arret_osm' ? '' : ' · ' + t.approxPos})` }) : ''))));
   } else nodes.push(el('p', { textContent: t.unknown }));
   out.replaceChildren(...nodes);

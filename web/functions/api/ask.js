@@ -27,16 +27,32 @@ export async function onRequestPost({ request, env }) {
   const now = seychellesNow();
   const stops = await stopNames(db);
   const { parsed, via } = await parseQuestion(env, question, stops);
-  const day = parsed.day || now.day;
+  const tomorrowDay = seychellesNow(new Date(Date.now() + 86400000)).day;
+  const day = parsed.day || (parsed.tomorrow ? tomorrowDay : now.day);
   const last = !!parsed.last && !parsed.time;
-  const after = last ? '00:00' : parsed.time || now.time;
-  const base = { ok: true, via, parsed, day, after, last, now: now.time, notice: { fr: VALID_FR, en: VALID_EN } };
+  const first = !last && !!parsed.first && !parsed.time;
+  const after = last || first ? '00:00' : parsed.time || (parsed.tomorrow ? '00:00' : now.time);
+  const base = { ok: true, via, parsed, day, after, last, first, tomorrow: !!parsed.tomorrow, now: now.time, notice: { fr: VALID_FR, en: VALID_EN } };
 
+  if (parsed.intent === 'next' && !parsed.depart && parsed.arrivee) {
+    const routes = (await db.prepare(`select distinct s.route from services s join trips t on t.service_id = s.id join stop_times a on a.trip_id = t.id and a.stop like ? escape '\\' order by s.route`).bind('%' + String(parsed.arrivee).replace(/[\\%_]/g, (c) => '\\' + c) + '%').all()).results.map((x) => x.route);
+    return json({ ...base, intent: 'need_from', arrivee: parsed.arrivee, routes });
+  }
   if (parsed.intent === 'next' && parsed.depart) {
-    const rows = await nextDepartures(db, { depart: parsed.depart, arrivee: parsed.arrivee, after, day, last });
+    const rows = await nextDepartures(db, { depart: parsed.depart, arrivee: parsed.arrivee, after, day, last, limit: first ? 5 : 8 });
     if (!rows.length) {
-      const sug = await findStops(db, parsed.depart);
-      return json({ ...base, intent: 'next', rows: [], suggestions: sug.map((s) => s.stop) });
+      // Pourquoi rien ? arrêt de départ inconnu, arrêt d'arrivée inconnu, ou pas de bus direct / plus de bus.
+      const sugD = await findStops(db, parsed.depart);
+      const sugA = parsed.arrivee ? await findStops(db, parsed.arrivee) : [];
+      let reason = 'none_after';
+      if (!sugD.length) reason = 'no_depart_stop';
+      else if (parsed.arrivee && !sugA.length) reason = 'no_arrivee_stop';
+      else if (parsed.arrivee) {
+        const any = await nextDepartures(db, { depart: parsed.depart, arrivee: parsed.arrivee, after: '00:00', day, limit: 1 });
+        reason = any.length ? 'none_after' : 'no_direct';
+      }
+      const sug = reason === 'no_arrivee_stop' ? sugA : sugD;
+      return json({ ...base, intent: 'next', rows: [], reason, suggestions: sug.map((x) => x.stop) });
     }
     rows.forEach((r) => { r.dur = minutesBetween(r.ta, r.tb); });
     return json({ ...base, intent: 'next', rows });
