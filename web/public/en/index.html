@@ -58,7 +58,8 @@
   .btn2:disabled { opacity:.6; cursor:wait; }
   .forget { background:none; border:0; color:#475569; font:inherit; font-size:.82rem; text-decoration:underline; cursor:pointer; padding:.2rem 0; margin-top:.4rem; }
   .hint { color:#475569; font-size:.88rem; }
-  .steps { list-style:none; margin:.4rem 0; padding:0; line-height:1.9; color:#64748b; }
+  #out { scroll-margin-top:.6rem; }
+  .steps { list-style:none; margin:.6rem 0; padding:.7rem 1rem; line-height:2; color:#64748b; font-size:1.05rem; background:#f0f9ff; border:2px solid #bae6fd; border-radius:12px; }
   .steps .done { color:#15803d; }
   .steps .cur { color:#0f172a; font-weight:600; }
   #out { margin-top:1.1rem; }
@@ -376,11 +377,14 @@ function showSteps(out, t, cur) {
   out.replaceChildren(el('ul', { className: 'steps', role: 'status' }, items), el('p', { className: 'hint', textContent: t.stepsWait }));
 }
 
+// Fait défiler la page jusqu'à la zone des étapes / du résultat (utile sur mobile).
+function goTo(el_) { requestAnimationFrame(() => el_.scrollIntoView({ behavior: 'smooth', block: 'start' })); }
+
 async function ask() {
   const q = $('#q').value.trim();
   if (q.length < 3) return;
   const t = T[lang], out = $('#out'), btn = $('#go');
-  btn.disabled = true; showSteps(out, t, 'stops');
+  btn.disabled = true; btn.textContent = t.loading; $('#q').readOnly = true; showSteps(out, t, 'stops'); goTo(out);
   try {
     const r = await fetch('/api/ask', { method: 'POST', headers: { 'content-type': 'application/json', 'x-stream': '1' }, body: JSON.stringify({ q }) });
     if (r.status === 429) { out.replaceChildren(el('p', { className: 'err', textContent: t.rate })); return; }
@@ -405,7 +409,7 @@ async function ask() {
     render(d);
     if (d.intent === 'next' && d.rows?.length && d.rows[0].sa) { remember('trips', { a: d.rows[0].sa, b: d.rows[0].sb || null }); renderSuggestions(); }
   } catch (e) { out.replaceChildren(el('p', { className: 'err', textContent: t.error })); }
-  finally { btn.disabled = false; }
+  finally { btn.disabled = false; btn.textContent = T[lang].go; $('#q').readOnly = false; goTo(out); }
 }
 
 // cls : 'cards' (une carte par ligne sur mobile) ou 'grid' (grille défilante, 1re colonne figée)
