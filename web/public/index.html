@@ -9,6 +9,9 @@
 <meta name="google-site-verification" content="Lguw7Gf9Ax0o85dpeaOsOwgIZE9REsqbFfyHeIMyUoY" />
 <meta name="robots" content="index, follow, max-snippet:-1">
 <link rel="canonical" href="https://bus-seychelles.pages.dev/">
+<link rel="alternate" hreflang="fr" href="https://bus-seychelles.pages.dev/">
+<link rel="alternate" hreflang="en" href="https://bus-seychelles.pages.dev/en/">
+<link rel="alternate" hreflang="x-default" href="https://bus-seychelles.pages.dev/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Bus Seychelles">
 <meta property="og:title" content="Horaires des bus Seychelles (Mahé, SPTC)">
@@ -340,7 +343,7 @@ en: {
 
 const fmtDur = (m) => (m >= 60 ? `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')}` : `${m} min`);
 
-let lang = (localStorage.getItem('lang') || (navigator.language || 'fr').slice(0, 2)) === 'en' ? 'en' : 'fr';
+let lang = document.documentElement.lang === 'en' ? 'en' : 'fr'; // la langue est portée par l'URL : / (fr) et /en/ (en)
 const $ = (s) => document.querySelector(s);
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.flat().forEach((k) => e.append(k)); return e; };
 
@@ -507,7 +510,7 @@ function locate(silent) {
 $('#near').onclick = () => locate(false);
 // Si la localisation est déjà autorisée pour ce site, on propose directement les arrêts proches.
 try { navigator.permissions?.query({ name: 'geolocation' }).then((r) => { if (r.state === 'granted') locate(true); }).catch(() => {}); } catch {}
-$('#lang').onclick = () => { lang = lang === 'fr' ? 'en' : 'fr'; localStorage.setItem('lang', lang); applyLang(); };
+$('#lang').onclick = () => { location.assign(lang === 'fr' ? '/en/' : '/'); };
 applyLang();
 </script>
 </body>

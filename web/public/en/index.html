@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#075985">
+<title>Seychelles bus timetable (Mahé, SPTC) — next bus, routes and stops</title>
+<meta name="description" content="Mahé (Seychelles) bus timetable: ask “next bus from Victoria to Beau Vallon” in plain English. SPTC routes, stops and schedules, August 2026. Unofficial, free service.">
+<meta name="google-site-verification" content="Lguw7Gf9Ax0o85dpeaOsOwgIZE9REsqbFfyHeIMyUoY" />
+<meta name="robots" content="index, follow, max-snippet:-1">
+<link rel="canonical" href="https://bus-seychelles.pages.dev/en/">
+<link rel="alternate" hreflang="fr" href="https://bus-seychelles.pages.dev/">
+<link rel="alternate" hreflang="en" href="https://bus-seychelles.pages.dev/en/">
+<link rel="alternate" hreflang="x-default" href="https://bus-seychelles.pages.dev/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Bus Seychelles">
+<meta property="og:title" content="Seychelles bus timetable (Mahé, SPTC)">
+<meta property="og:description" content="Next bus, route timetables and stops on Mahé, in one question. Unofficial service, scheduled SPTC times only.">
+<meta property="og:url" content="https://bus-seychelles.pages.dev/en/">
+<meta property="og:locale" content="en_GB">
+<meta property="og:locale:alternate" content="fr_FR">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Seychelles bus timetable (Mahé, SPTC)">
+<meta name="twitter:description" content="Next bus, routes and stops on Mahé. Unofficial service.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Bus Seychelles","alternateName":["Seychelles bus timetable","Horaires bus Mahé SPTC"],"url":"https://bus-seychelles.pages.dev/en/","description":"Scheduled SPTC bus timetables for Mahé (Seychelles), searchable in plain language. Unofficial service, not affiliated with SPTC.","applicationCategory":"TravelApplication","operatingSystem":"Any","inLanguage":"en","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"areaServed":{"@type":"Place","name":"Mahé, Seychelles"}}</script>
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<style>
+  :root { --ink:#0f172a; --sea:#0891b2; --deep:#075985; --sun:#f59e0b; --coral:#ea580c; --sand:#fffbeb; --card:#ffffffee; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--ink); background:var(--sand); }
+  a { color:var(--deep); }
+  .banner { background:#fef3c7; border-bottom:1px solid #fcd34d; padding:.5rem 1rem; text-align:center; font-size:.9rem; }
+  header.hero { position:relative; min-height:420px; background:#38bdf8 url(/hero.svg) center/cover no-repeat; display:flex; flex-direction:column; justify-content:flex-end; }
+  header.hero::after { content:""; position:absolute; inset:0; background:linear-gradient(to bottom,#0b3a5a55,transparent 45%,#0b3a5a99); }
+  .nav { position:absolute; top:0; left:0; right:0; z-index:2; display:flex; align-items:center; gap:.75rem; padding:.8rem 1.2rem; color:#fff; }
+  .nav img { width:44px; height:44px; }
+  .nav b { font-size:1.15rem; letter-spacing:.2px; text-shadow:0 1px 4px #0006; }
+  .nav .sp { flex:1; }
+  .nav a { color:#fff; text-decoration:none; font-size:.95rem; text-shadow:0 1px 3px #0006; }
+  .nav button { background:#ffffff33; color:#fff; border:1px solid #fff9; border-radius:999px; padding:.25rem .8rem; cursor:pointer; }
+  .hero-txt { position:relative; z-index:2; color:#fff; padding:0 1.2rem 5.2rem; max-width:980px; margin:0 auto; width:100%; text-shadow:0 2px 8px #0008; }
+  .hero-txt h1 { margin:.2rem 0; font-size:clamp(1.9rem,5vw,3rem); line-height:1.1; }
+  .hero-txt p { margin:.3rem 0 0; font-size:1.1rem; max-width:620px; }
+  main { max-width:980px; margin:-3.6rem auto 3rem; padding:0 1rem; position:relative; z-index:3; }
+  .card { background:var(--card); border-radius:18px; box-shadow:0 10px 30px #0b3a5a33; padding:1.2rem; backdrop-filter:blur(4px); }
+  textarea { width:100%; min-height:96px; font:inherit; padding:.8rem 1rem; border:2px solid #bae6fd; border-radius:12px; resize:vertical; }
+  textarea:focus { outline:none; border-color:var(--sea); }
+  .row { display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; margin-top:.7rem; }
+  .btn { background:linear-gradient(135deg,var(--sea),var(--deep)); color:#fff; border:0; border-radius:12px; padding:.7rem 1.4rem; font:inherit; font-weight:600; cursor:pointer; }
+  .btn:disabled { opacity:.6; cursor:wait; }
+  .chips { display:flex; flex-wrap:wrap; gap:.45rem; margin-top:.9rem; }
+  .chip { background:#e0f2fe; color:var(--deep); border:1px solid #bae6fd; border-radius:999px; padding:.3rem .8rem; cursor:pointer; font-size:.9rem; }
+  .chip:hover { background:#bae6fd; }
+  .chip.mine { background:#fef3c7; border-color:#fde68a; color:#78350f; }
+  .chip.mine:hover { background:#fde68a; }
+  .btn2 { background:#fff; color:var(--deep); border:2px solid #bae6fd; border-radius:12px; padding:.6rem 1rem; font:inherit; font-weight:600; cursor:pointer; }
+  .btn2:hover { background:#e0f2fe; }
+  .btn2:disabled { opacity:.6; cursor:wait; }
+  .forget { background:none; border:0; color:#475569; font:inherit; font-size:.82rem; text-decoration:underline; cursor:pointer; padding:.2rem 0; margin-top:.4rem; }
+  .hint { color:#475569; font-size:.88rem; }
+  #out { margin-top:1.1rem; }
+  .meta { color:#475569; font-size:.85rem; margin:.3rem 0 .6rem; }
+  table { border-collapse:collapse; width:100%; font-size:.95rem; }
+  th, td { text-align:left; padding:.4rem .6rem; border-bottom:1px solid #e2e8f0; white-space:nowrap; }
+  th { background:#f0f9ff; position:sticky; top:0; }
+  .scroll { overflow-x:auto; max-height:420px; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:1rem; }
+  .tag { display:inline-block; background:var(--coral); color:#fff; border-radius:6px; padding:0 .45rem; font-weight:700; }
+  .err { color:#b91c1c; }
+  tr.click { cursor:pointer; } tr.click:hover td, tr.click:focus-visible td { background:#f0f9ff; } tr.click:focus-visible { outline:2px solid var(--sea); outline-offset:-2px; }
+  tr.click td:first-child::before { content:'▸'; display:inline-block; margin-right:.35rem; color:var(--sea); transition:transform .15s; }
+  tr.click[aria-expanded="true"] td:first-child::before { transform:rotate(90deg); }
+  tr.detail td { background:#f8fafc; white-space:normal; }
+  .tripbox { max-height:300px; overflow:auto; }
+  ol.trip { list-style:none; margin:0; padding:0 0 0 .2rem; }
+  ol.trip li { display:flex; align-items:baseline; gap:.7rem; padding:.25rem 0 .25rem .9rem; border-left:3px solid #cbd5e1; position:relative; color:#94a3b8; }
+  ol.trip li .tm { font-variant-numeric:tabular-nums; min-width:3.2rem; }
+  ol.trip li::before { content:''; position:absolute; left:-7px; top:.75rem; width:11px; height:11px; border-radius:50%; background:#cbd5e1; border:2px solid #f8fafc; }
+  ol.trip li.in { color:var(--ink); border-left-color:var(--sea); } ol.trip li.in::before { background:var(--sea); }
+  ol.trip li.a, ol.trip li.b { color:var(--ink); font-weight:700; background:#fef3c7; border-radius:0 8px 8px 0; border-left-color:var(--coral); }
+  ol.trip li.a::before, ol.trip li.b::before { background:var(--coral); }
+  ol.trip .badge { margin-left:auto; margin-right:.4rem; background:var(--coral); color:#fff; border-radius:6px; padding:0 .45rem; font-size:.75rem; font-weight:600; }
+  section.doc { margin-top:1.4rem; }
+  section.doc h2 { margin:.1rem 0 .5rem; color:var(--deep); }
+  section.doc h3 { margin:1rem 0 .3rem; }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+  @media (max-width:760px){ .two{grid-template-columns:1fr;} }
+  .warn { background:#fff7ed; border-left:5px solid var(--coral); padding:.7rem 1rem; border-radius:8px; }
+  footer { text-align:center; color:#475569; font-size:.88rem; padding:1.5rem 1rem 2.5rem; }
+  code { background:#f1f5f9; padding:.05rem .35rem; border-radius:5px; }
+  /* Grilles de ligne : première colonne figée pour le défilement horizontal */
+  table.grid td:first-child, table.grid th:first-child { position:sticky; left:0; background:#f8fafc; font-weight:600; }
+  .chip, .btn, .nav button { min-height:44px; }
+  .chip { display:inline-flex; align-items:center; }
+  @media (max-width:640px) {
+    body { font-size:15.5px; }
+    .banner { font-size:.8rem; padding:.45rem .7rem; text-align:left; }
+    header.hero { min-height:340px; }
+    .nav { padding:.6rem .8rem; padding-top:max(.6rem, env(safe-area-inset-top)); gap:.5rem; }
+    .nav img { width:36px; height:36px; }
+    .nav a { display:none; }
+    .hero-txt { padding:0 1rem 4.6rem; }
+    .hero-txt p { font-size:1rem; }
+    main { margin-top:-3.2rem; padding:0 .6rem; padding-bottom:env(safe-area-inset-bottom); }
+    .card { padding:.9rem; border-radius:16px; }
+    .row { flex-direction:column; align-items:stretch; }
+    .btn { width:100%; font-size:1.05rem; }
+    .hint { text-align:center; }
+    /* chips : une ligne qui défile horizontalement */
+    .chips { flex-wrap:nowrap; overflow-x:auto; padding-bottom:.4rem; margin-right:-.9rem; padding-right:.9rem; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+    .chips::-webkit-scrollbar { display:none; }
+    .chips .hint { display:none; }
+    .chip { white-space:nowrap; flex:0 0 auto; }
+    /* résultats « prochains bus » : une carte par départ */
+    table.cards thead { display:none; }
+    table.cards, table.cards tbody { display:block; }
+    table.cards tr { display:grid; grid-template-columns:auto 1fr; gap:.1rem .8rem; background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:.6rem .8rem; margin-bottom:.6rem; }
+    table.cards td { display:contents; }
+    table.cards td::before { content:attr(data-label); color:#64748b; font-size:.8rem; }
+    table.cards td { border:0; }
+    table.cards tr.detail { display:block; margin:-.4rem 0 .6rem; border-top:0; border-radius:0 0 12px 12px; }
+    table.cards tr.detail td { display:block; }
+    table.cards tr.detail td::before { content:none; }
+    table.cards tr.click td:first-child::before { align-self:center; }
+    .scroll:has(table.cards) { border:0; max-height:none; overflow:visible; }
+    .scroll { max-height:60vh; }
+    th, td { padding:.45rem .5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="banner" data-i="banner">⚠️ <b>Unofficial service</b>: this page is neither published nor endorsed by SPTC. Scheduled times only, no real-time data.</div>
+
+<header class="hero">
+  <div class="nav">
+    <img src="/logo.svg" alt=""><b>Bus Seychelles</b>
+    <span class="sp"></span>
+    <a href="#docs" data-i="navDocs"></a>
+    <a href="#source" data-i="navSource"></a>
+    <button id="lang" type="button" aria-label="Language">EN</button>
+  </div>
+  <div class="hero-txt">
+    <h1 data-i="title">Mahé buses, in one question</h1>
+    <p data-i="subtitle">Ask in plain language: “next bus from Victoria to Beau Vallon”.</p>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+    <label for="q" class="hint" data-i="label">Your question</label>
+    <textarea id="q" maxlength="300" data-iph="placeholder"></textarea>
+    <div class="row">
+      <button class="btn" id="go" type="button" data-i="go">Search</button>
+      <button class="btn2" id="near" type="button" data-i="near">📍 Near me</button>
+      <span class="hint" data-i="hint">Seychelles time (UTC+4) by default</span>
+    </div>
+    <p class="hint" id="geomsg" role="status" hidden></p>
+    <div class="chips" id="sugg" aria-label="Suggestions"></div>
+    <div class="chips" id="chips"></div>
+    <div id="out" aria-live="polite"></div>
+  </div>
+
+  <section class="card doc" id="docs">
+    <h2 data-i="docsTitle">About this service</h2>
+    <div data-i-html="docsBody">
+    <div class="two"><div>
+      <h3>How it works</h3>
+      <ol>
+        <li>A free AI (Cloudflare Workers AI) <b>understands your sentence</b> and extracts: origin, destination, time, day, route.</li>
+        <li>A plain program <b>queries the timetable database</b> built from the official PDFs.</li>
+        <li>The answer is shown as is: <b>the AI never makes up a time</b>.</li>
+      </ol>
+      <p>If the free AI quota runs out, simple rules take over (“from X to Y”, “route 20”).</p>
+    </div><div>
+      <h3>Sample sentences</h3>
+      <ul><li><code>next bus from Victoria to Beau Vallon</code></li><li><code>from Beau Vallon to Victoria around 17:30</code></li><li><code>timetable route 24A saturday</code></li><li><code>stop Glacis</code></li></ul>
+      <h3>Limits</h3>
+      <ul><li>No real-time data (delays, cancellations).</li><li>Direct trips only, no transfers.</li><li>Stop GPS positions are incomplete.</li></ul>
+    </div></div></div>
+  </section>
+
+  <section class="card doc" id="source">
+    <h2 data-i="srcTitle">Where does the data come from?</h2>
+    <div data-i-html="srcBody">
+    <p class="warn"><b>Unofficial integration.</b> This site is not affiliated with the Seychelles Public Transport Corporation (SPTC). When in doubt, rely on the timetables posted at stops or on the official website.</p>
+    <p>Times come from the <b>official SPTC PDF timetables</b>, effective <b>4 August 2026</b>, published at
+      <a href="https://sptc.sc/timetable/" rel="noopener">sptc.sc/timetable</a>:</p>
+    <ul>
+      <li><a href="https://sptc.sc/wp-content/uploads/2026/08/SPTC_Weekday_Timetable_August_2026_Updated.pdf" rel="noopener">Weekday timetable (PDF)</a></li>
+      <li><a href="https://sptc.sc/wp-content/uploads/2026/08/SPTC_Weekend_Timetable_July_2026.pdf" rel="noopener">Weekend timetable (PDF)</a></li>
+    </ul>
+    <p>SPTC publishes neither a GTFS feed nor an API: the tables in these PDFs were extracted automatically (pdfplumber), cleaned, and stored in a SQLite database. Extraction errors are possible.</p>
+    <p>Stop positions, where available, come from <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> (© contributors, ODbL) and are often approximate.</p>
+    <p>If you are from SPTC and want this data removed or corrected, please contact the site author.</p></div>
+  </section>
+</main>
+
+<footer>
+  <div data-i-html="footer">Bus Seychelles · unofficial integration · data © SPTC (timetables), © OpenStreetMap (positions)<br>Questions are kept for 60 days, without IP address, to improve the service. Your position and frequent searches stay on your device.</div>
+</footer>
+
+<script>
+const REPO = 'https://github.com/francoistll/sptc-bus-mcp'; // ex. 'https://github.com/<toi>/sptc-bus-mcp' — laisse vide pour masquer le lien
+const PDF_WD = 'https://sptc.sc/wp-content/uploads/2026/08/SPTC_Weekday_Timetable_August_2026_Updated.pdf';
+const PDF_WE = 'https://sptc.sc/wp-content/uploads/2026/08/SPTC_Weekend_Timetable_July_2026.pdf';
+const mcpLink = (fr) => ` · <a href="/claude">${fr ? 'Utiliser dans Claude (serveur MCP)' : 'Use in Claude (MCP server)'}</a>`;
+const repoLink = (fr) => mcpLink(fr) + (REPO ? ` · <a href="${REPO}" rel="noopener">${fr ? 'Code source' : 'Source code'}</a> · <a href="${REPO}/issues/new" rel="noopener">${fr ? 'Signaler une erreur / contact' : 'Report an error / contact'}</a>` : '');
+
+const T = {
+fr: {
+  banner: '⚠️ <b>Service non officiel</b> : cette page n’est ni éditée ni approuvée par la SPTC. Horaires théoriques, sans temps réel.',
+  navDocs: 'Documentation', navSource: 'Source des données',
+  title: 'Les bus de Mahé, en une question',
+  subtitle: 'Posez votre question en langage naturel : « prochain bus de Victoria à Beau Vallon ».',
+  label: 'Votre question', placeholder: 'Ex. : prochain bus de Victoria à Beau Vallon après 16h',
+  go: 'Chercher', hint: 'Heure des Seychelles (UTC+4) par défaut',
+  examplesTitle: 'Exemples',
+  terminus: 'terminus',
+  near: '📍 Près de moi', locating: 'Recherche de votre position…', nearNone: 'Aucun arrêt dont la position est connue à moins de 2 km. La position de beaucoup d’arrêts n’est pas encore connue : tapez plutôt votre question.',
+  geoDenied: 'Position refusée ou indisponible. Vous pouvez autoriser la localisation dans les réglages de votre navigateur.', geoOutside: 'Vous semblez hors de Mahé : suggestions de proximité indisponibles.',
+  forget: 'Effacer ma mémoire sur cet appareil', memNote: 'Vos recherches fréquentes et votre position restent sur votre appareil : rien n’est envoyé ni enregistré sur le serveur.',
+  qFrom: (a) => `prochain bus depuis ${a}`, qFromTo: (a, b) => `prochain bus de ${a} à ${b}`, home: 'domicile probable', metersAway: (m) => (m < 950 ? `${Math.round(m / 10) * 10} m` : `${(m / 1000).toFixed(1)} km`),
+  ex: ['Prochain bus de Victoria à Beau Vallon', 'Bus de Beau Vallon à Victoria vers 17h30', 'Horaires de la ligne 20', 'Ligne 22 le week-end', 'Premier bus de Victoria à Anse Royale', 'Arrêts « Anse Etoile »'],
+  loading: 'Recherche…',
+  next: (n) => `${n} prochain(s) passage(s)`,
+  cNext: ['Départ', 'Ligne', 'Arrêt de départ', 'Arrivée', 'Arrêt d’arrivée', 'Durée'],
+  lastN: (n) => `${n} derniers passages de la journée`,
+  tapHint: 'Touchez une ligne pour voir tous les arrêts du trajet.', tripLoading: 'Chargement du trajet…', tripErr: 'Détail indisponible.',
+  board: 'Montée', alight: 'Descente', tripSum: (m, n) => `${m ? 'Trajet de ' + fmtDur(m) + ' · ' : ''}${n} arrêts`,
+  firstN: (n) => `${n} premiers passages de la journée`,
+  needFrom: (stop) => `Pour aller à « ${stop} », indiquez votre arrêt de départ, par exemple « de Victoria à ${stop} ».`,
+  routesAt: 'Lignes qui desservent cet arrêt :',
+  reasons: {
+    no_depart_stop: 'Je ne trouve pas cet arrêt de départ dans les horaires SPTC.',
+    no_arrivee_stop: 'Je ne trouve pas cet arrêt d’arrivée dans les horaires SPTC.',
+    no_direct: 'Pas de bus direct entre ces deux arrêts dans les horaires (une correspondance est peut-être nécessaire).',
+    none_after: 'Plus de départ après cette heure pour ce trajet. Essayez « premier bus » ou une autre heure.',
+  },
+  tomorrow: 'demain',
+  stopNone: 'Aucun arrêt de ce nom dans les horaires SPTC (le service ne couvre que Mahé).',
+  none: 'Aucun passage trouvé. Essayez un autre arrêt ou une autre heure.',
+  suggest: 'Arrêts proches de votre saisie :',
+  unknown: 'Je n’ai pas compris. Essayez : « prochain bus de Victoria à Beau Vallon » ou « horaires de la ligne 20 ».',
+  rate: 'Trop de requêtes, réessayez dans une minute.', error: 'Service indisponible, réessayez plus tard.',
+  day: { weekday: 'semaine', weekend: 'week-end' }, after: 'à partir de', via: { llm: 'compris par IA', rules: 'compris par règles simples' },
+  stopsTitle: 'Arrêts trouvés', approxPos: 'position approximative',
+  docsTitle: 'À propos de ce service',
+  docsBody: `
+    <div class="two"><div>
+      <h3>Comment ça marche</h3>
+      <ol>
+        <li>Une IA gratuite (Cloudflare Workers AI) <b>comprend votre phrase</b> et en extrait : départ, arrivée, heure, jour, ligne.</li>
+        <li>Un programme classique <b>interroge la base d’horaires</b> issue des PDF officiels.</li>
+        <li>La réponse est affichée telle quelle : <b>l’IA n’invente jamais un horaire</b>.</li>
+      </ol>
+      <p>Si le quota gratuit de l’IA est épuisé, des règles simples prennent le relais (« de X à Y », « ligne 20 »).</p>
+    </div><div>
+      <h3>Exemples de phrases</h3>
+      <ul><li><code>prochain bus de Victoria à Beau Vallon</code></li><li><code>de Beau Vallon à Victoria vers 17h30</code></li><li><code>horaires ligne 24A samedi</code></li><li><code>arrêt Glacis</code></li></ul>
+      <h3>Limites</h3>
+      <ul><li>Pas de temps réel (retards, annulations).</li><li>Trajets directs seulement, pas de correspondances.</li><li>Positions GPS partielles des arrêts.</li></ul>
+    </div></div>`,
+  srcTitle: 'D’où viennent les données ?',
+  srcBody: `
+    <p class="warn"><b>Intégration non officielle.</b> Ce site n’est pas affilié à la Seychelles Public Transport Corporation (SPTC). En cas de doute, fiez-vous aux horaires affichés aux arrêts ou sur le site officiel.</p>
+    <p>Les horaires proviennent des <b>PDF officiels de la SPTC</b>, valables au <b>4 août 2026</b>, publiés sur
+      <a href="https://sptc.sc/timetable/" rel="noopener">sptc.sc/timetable</a> :</p>
+    <ul>
+      <li><a href="${PDF_WD}" rel="noopener">Horaires de semaine (PDF)</a></li>
+      <li><a href="${PDF_WE}" rel="noopener">Horaires de week-end (PDF)</a></li>
+    </ul>
+    <p>La SPTC ne publie ni flux GTFS ni API : les tableaux de ces PDF ont été extraits automatiquement (pdfplumber), nettoyés, puis rangés dans une base SQLite. Cette extraction peut comporter des erreurs.</p>
+    <p>Les positions des arrêts, quand elles existent, viennent d’<a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> (© contributeurs, licence ODbL) et sont souvent approximatives.</p>
+    <p>Si vous êtes de la SPTC et souhaitez retirer ou corriger ces données, contactez l’auteur du site.</p>`,
+  footer: 'Bus Seychelles · intégration non officielle · données © SPTC (horaires), © OpenStreetMap (positions)<br>Les questions posées sont conservées 60 jours, sans adresse IP, pour améliorer le service. Votre position et vos recherches fréquentes restent sur votre appareil.' ,
+},
+en: {
+  banner: '⚠️ <b>Unofficial service</b>: this page is neither published nor endorsed by SPTC. Scheduled times only, no real-time data.',
+  navDocs: 'Documentation', navSource: 'Data source',
+  title: 'Mahé buses, in one question',
+  subtitle: 'Ask in plain language: “next bus from Victoria to Beau Vallon”.',
+  label: 'Your question', placeholder: 'e.g. next bus from Victoria to Beau Vallon after 4pm',
+  go: 'Search', hint: 'Seychelles time (UTC+4) by default',
+  examplesTitle: 'Examples',
+  terminus: 'terminus',
+  near: '📍 Near me', locating: 'Finding your position…', nearNone: 'No stop with a known position within 2 km. Many stop positions are not known yet: please type your question instead.',
+  geoDenied: 'Location denied or unavailable. You can allow location in your browser settings.', geoOutside: 'You seem to be outside Mahé: nearby suggestions are unavailable.',
+  forget: 'Clear my memory on this device', memNote: 'Your frequent searches and your position stay on your device: nothing is sent to or stored on the server.',
+  qFrom: (a) => `next bus from ${a}`, qFromTo: (a, b) => `next bus from ${a} to ${b}`, home: 'likely home', metersAway: (m) => (m < 950 ? `${Math.round(m / 10) * 10} m` : `${(m / 1000).toFixed(1)} km`),
+  ex: ['Next bus from Victoria to Beau Vallon', 'Bus from Beau Vallon to Victoria around 17:30', 'Timetable for route 20', 'Route 22 on weekends', 'First bus from Victoria to Anse Royale', 'Stops “Anse Etoile”'],
+  loading: 'Searching…',
+  next: (n) => `${n} upcoming departure(s)`,
+  cNext: ['Departs', 'Route', 'From stop', 'Arrives', 'To stop', 'Duration'],
+  lastN: (n) => `Last ${n} departures of the day`,
+  tapHint: 'Tap a row to see every stop of the trip.', tripLoading: 'Loading trip…', tripErr: 'Details unavailable.',
+  board: 'Board', alight: 'Get off', tripSum: (m, n) => `${m ? 'Trip of ' + fmtDur(m) + ' · ' : ''}${n} stops`,
+  firstN: (n) => `First ${n} departures of the day`,
+  needFrom: (stop) => `To go to “${stop}”, tell me where you start, for example “from Victoria to ${stop}”.`,
+  routesAt: 'Routes serving this stop:',
+  reasons: {
+    no_depart_stop: 'I cannot find this departure stop in the SPTC timetable.',
+    no_arrivee_stop: 'I cannot find this arrival stop in the SPTC timetable.',
+    no_direct: 'No direct bus between these two stops in the timetable (a transfer may be needed).',
+    none_after: 'No more departures after that time for this trip. Try “first bus” or another time.',
+  },
+  tomorrow: 'tomorrow',
+  stopNone: 'No stop with that name in the SPTC timetable (the service covers Mahé only).',
+  none: 'No departure found. Try another stop or time.',
+  suggest: 'Stops similar to your input:',
+  unknown: 'I did not understand. Try: “next bus from Victoria to Beau Vallon” or “timetable for route 20”.',
+  rate: 'Too many requests, please try again in a minute.', error: 'Service unavailable, please try again later.',
+  day: { weekday: 'weekday', weekend: 'weekend' }, after: 'from', via: { llm: 'understood by AI', rules: 'understood by simple rules' },
+  stopsTitle: 'Stops found', approxPos: 'approximate position',
+  docsTitle: 'About this service',
+  docsBody: `
+    <div class="two"><div>
+      <h3>How it works</h3>
+      <ol>
+        <li>A free AI (Cloudflare Workers AI) <b>understands your sentence</b> and extracts: origin, destination, time, day, route.</li>
+        <li>A plain program <b>queries the timetable database</b> built from the official PDFs.</li>
+        <li>The answer is shown as is: <b>the AI never makes up a time</b>.</li>
+      </ol>
+      <p>If the free AI quota runs out, simple rules take over (“from X to Y”, “route 20”).</p>
+    </div><div>
+      <h3>Sample sentences</h3>
+      <ul><li><code>next bus from Victoria to Beau Vallon</code></li><li><code>from Beau Vallon to Victoria around 17:30</code></li><li><code>timetable route 24A saturday</code></li><li><code>stop Glacis</code></li></ul>
+      <h3>Limits</h3>
+      <ul><li>No real-time data (delays, cancellations).</li><li>Direct trips only, no transfers.</li><li>Stop GPS positions are incomplete.</li></ul>
+    </div></div>`,
+  srcTitle: 'Where does the data come from?',
+  srcBody: `
+    <p class="warn"><b>Unofficial integration.</b> This site is not affiliated with the Seychelles Public Transport Corporation (SPTC). When in doubt, rely on the timetables posted at stops or on the official website.</p>
+    <p>Times come from the <b>official SPTC PDF timetables</b>, effective <b>4 August 2026</b>, published at
+      <a href="https://sptc.sc/timetable/" rel="noopener">sptc.sc/timetable</a>:</p>
+    <ul>
+      <li><a href="${PDF_WD}" rel="noopener">Weekday timetable (PDF)</a></li>
+      <li><a href="${PDF_WE}" rel="noopener">Weekend timetable (PDF)</a></li>
+    </ul>
+    <p>SPTC publishes neither a GTFS feed nor an API: the tables in these PDFs were extracted automatically (pdfplumber), cleaned, and stored in a SQLite database. Extraction errors are possible.</p>
+    <p>Stop positions, where available, come from <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> (© contributors, ODbL) and are often approximate.</p>
+    <p>If you are from SPTC and want this data removed or corrected, please contact the site author.</p>`,
+  footer: 'Bus Seychelles · unofficial integration · data © SPTC (timetables), © OpenStreetMap (positions)<br>Questions are kept for 60 days, without IP address, to improve the service. Your position and frequent searches stay on your device.',
+}};
+
+const fmtDur = (m) => (m >= 60 ? `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')}` : `${m} min`);
+
+let lang = document.documentElement.lang === 'en' ? 'en' : 'fr'; // la langue est portée par l'URL : / (fr) et /en/ (en)
+const $ = (s) => document.querySelector(s);
+const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); kids.flat().forEach((k) => e.append(k)); return e; };
+
+function applyLang() {
+  const t = T[lang];
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i]').forEach((n) => { n.innerHTML = t[n.dataset.i]; });
+  document.querySelectorAll('[data-i-html]').forEach((n) => { n.innerHTML = t[n.dataset.iHtml]; });
+  document.querySelectorAll('[data-iph]').forEach((n) => { n.placeholder = t[n.dataset.iph]; });
+  $('#lang').textContent = lang === 'fr' ? 'EN' : 'FR';
+  $('footer div').innerHTML = t.footer + repoLink(lang === 'fr');
+  const chips = $('#chips'); chips.replaceChildren(el('span', { className: 'hint', textContent: t.examplesTitle + ' :' }));
+  t.ex.forEach((x) => chips.append(el('button', { className: 'chip', type: 'button', textContent: x, onclick: () => { $('#q').value = x; ask(); } })));
+  if (typeof renderSuggestions === 'function') renderSuggestions();
+}
+
+async function ask() {
+  const q = $('#q').value.trim();
+  if (q.length < 3) return;
+  const t = T[lang], out = $('#out'), btn = $('#go');
+  btn.disabled = true; out.replaceChildren(el('p', { className: 'hint', textContent: t.loading }));
+  try {
+    const r = await fetch('/api/ask', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ q }) });
+    if (r.status === 429) { out.replaceChildren(el('p', { className: 'err', textContent: t.rate })); return; }
+    const d = await r.json();
+    if (!d.ok) { out.replaceChildren(el('p', { className: 'err', textContent: t.error })); return; }
+    render(d);
+    if (d.intent === 'next' && d.rows?.length && d.rows[0].sa) { remember('trips', { a: d.rows[0].sa, b: d.rows[0].sb || null }); renderSuggestions(); }
+  } catch (e) { out.replaceChildren(el('p', { className: 'err', textContent: t.error })); }
+  finally { btn.disabled = false; }
+}
+
+// cls : 'cards' (une carte par ligne sur mobile) ou 'grid' (grille défilante, 1re colonne figée)
+function table(head, rows, cls = 'grid', trips) {
+  const th = el('tr', {}, head.map((h) => el('th', { textContent: h })));
+  const cell = (c, i) => { const td = el('td', {}, c instanceof Node ? c : document.createTextNode(c)); td.dataset.label = head[i]; return td; };
+  const body = rows.map((r, i) => {
+    const tr = el('tr', {}, r.map(cell));
+    if (trips) { tr.className = 'click'; tr.tabIndex = 0; tr.setAttribute('role', 'button'); tr.setAttribute('aria-expanded', 'false'); const go = () => toggleTrip(tr, trips[i], r.length); tr.onclick = go; tr.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } }; }
+    return tr;
+  });
+  return el('div', { className: 'scroll' }, el('table', { className: cls }, el('thead', {}, th), el('tbody', {}, body)));
+}
+
+async function toggleTrip(tr, row, ncols) {
+  const t = T[lang], open = tr.nextElementSibling?.classList.contains('detail');
+  if (open) { tr.nextElementSibling.remove(); tr.setAttribute('aria-expanded', 'false'); return; }
+  const td = el('td', { colSpan: ncols }, el('p', { className: 'hint', textContent: t.tripLoading }));
+  const dt = el('tr', { className: 'detail' }, td);
+  tr.after(dt); tr.setAttribute('aria-expanded', 'true');
+  try {
+    const r = await fetch('/api/trip?id=' + row.trip);
+    const d = await r.json();
+    if (!d.ok) throw new Error('x');
+    const hasB = row.qb != null;
+    const ol = el('ol', { className: 'trip' });
+    d.stops.forEach((s) => {
+      const isA = s.seq === row.qa, isB = hasB && s.seq === row.qb;
+      const inside = s.seq > row.qa && hasB && s.seq < row.qb;
+      const li = el('li', { className: isA ? 'a' : isB ? 'b' : inside ? 'in' : (!hasB && s.seq > row.qa) || (hasB && s.seq > row.qa && s.seq < row.qb) ? 'in' : 'out' },
+        el('span', { className: 'tm', textContent: s.time || '–' }), el('span', { className: 'nm', textContent: s.stop }));
+      if (isA || isB) li.append(el('span', { className: 'badge', textContent: isA ? t.board : t.alight }));
+      ol.append(li);
+    });
+    const sum = el('div', { className: 'meta', textContent: t.tripSum(row.dur, d.stops.length) });
+    td.replaceChildren(sum, el('div', { className: 'tripbox' }, ol));
+    ol.querySelector('li.a')?.scrollIntoView({ block: 'nearest' });
+  } catch (e) { td.replaceChildren(el('p', { className: 'err', textContent: t.tripErr })); }
+}
+
+function render(d) {
+  const t = T[lang], out = $('#out'), nodes = [];
+  const meta = `${d.tomorrow ? t.tomorrow + ' · ' : ''}${t.day[d.day]} · ${t.after} ${d.after} · ${t.via[d.via]} · ${d.notice[lang]}`;
+  if (d.intent === 'next') {
+    if (!d.rows.length) {
+      nodes.push(el('p', { textContent: t.reasons[d.reason] || t.none }));
+      if (d.suggestions?.length) nodes.push(el('p', { className: 'hint', textContent: t.suggest + ' ' + d.suggestions.join(', ') }));
+    } else {
+      nodes.push(el('h3', { textContent: d.last ? t.lastN(d.rows.length) : d.first ? t.firstN(d.rows.length) : t.next(d.rows.length) }), el('div', { className: 'meta', textContent: d.last || d.first ? meta.replace(/ · [^·]*\d\d:\d\d · /, ' · ') : meta }));
+      nodes.push(el('div', { className: 'meta', textContent: t.tapHint }));
+      nodes.push(table(t.cNext, d.rows.map((r) => [r.ta, el('span', {}, el('span', { className: 'tag', textContent: r.route }), ' ', el('span', { className: 'hint', textContent: r.title.replace(/^Route\s+\S+\s*/i, '') })), r.sa, r.tb || '–', r.sb ? (r.term ? `${r.sb} · ${t.terminus}` : r.sb) : '–', r.dur != null ? fmtDur(r.dur) : '–']), 'cards', d.rows));
+    }
+  } else if (d.intent === 'need_from') {
+    nodes.push(el('p', { textContent: t.needFrom(d.arrivee) }));
+    if (d.routes?.length) nodes.push(el('p', {}, el('span', { className: 'hint', textContent: t.routesAt + ' ' }), d.routes.map((r) => el('span', {}, el('span', { className: 'tag', textContent: r }), ' '))));
+  } else if (d.intent === 'line') {
+    nodes.push(el('div', { className: 'meta', textContent: meta }));
+    if (!d.tables.length) nodes.push(el('p', { textContent: t.none }));
+    d.tables.forEach((x) => { nodes.push(el('h3', { textContent: x.title }), table(x.stops, x.rows)); });
+  } else if (d.intent === 'stop') {
+    nodes.push(el('h3', { textContent: t.stopsTitle }));
+    if (!d.stops.length) nodes.push(el('p', { textContent: t.stopNone }));
+    else nodes.push(el('ul', {}, d.stops.map((s) => el('li', {}, s.stop + ' ', s.lat != null ? el('span', { className: 'hint', textContent: `(${s.lat.toFixed(4)}, ${s.lon.toFixed(4)}${s.quality === 'arret_osm' ? '' : ' · ' + t.approxPos})` }) : ''))));
+  } else nodes.push(el('p', { textContent: t.unknown }));
+  out.replaceChildren(...nodes);
+}
+
+$('#go').onclick = ask;
+$('#q').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) ask(); });
+// ---- Mémoire locale : tout reste dans le navigateur (localStorage), rien n'est envoyé au serveur ----
+const MEM_KEY = 'busMemory.v1';
+const loadMem = () => { try { const m = JSON.parse(localStorage.getItem(MEM_KEY)); return { trips: m?.trips || [], spots: m?.spots || [] }; } catch { return { trips: [], spots: [] }; } };
+const saveMem = (m) => { try { localStorage.setItem(MEM_KEY, JSON.stringify(m)); } catch {} };
+const scHour = (ts) => new Date(ts + 4 * 3600e3).getUTCHours(); // heure des Seychelles
+const weight = (e, now) => Math.pow(0.5, (now - e.t) / (30 * 864e5)); // les habitudes récentes comptent plus (demi-vie 30 jours)
+const hdiff = (a, b) => { const d = Math.abs(a - b) % 24; return Math.min(d, 24 - d); };
+function remember(kind, rec) {
+  const m = loadMem(); const now = Date.now();
+  if (kind === 'spots') { const last = m.spots[m.spots.length - 1]; if (last && now - last.t < 6 * 3600e3) return; } // un relevé de position toutes les 6 h au plus
+  m[kind].push({ ...rec, t: now, h: scHour(now) }); m[kind] = m[kind].slice(-200); saveMem(m);
+}
+// Trajets fréquents : au moins 2 recherches, pondérées par la récence et l'heure de la journée (±3 h : ×2).
+function frequentTrips(now = Date.now()) {
+  const h = scHour(now), acc = new Map();
+  for (const e of loadMem().trips) {
+    const k = e.a + '\u0000' + (e.b || ''); const o = acc.get(k) || { n: 0, s: 0 };
+    o.n++; o.s += weight(e, now) * (hdiff(e.h, h) <= 3 ? 2 : 1); acc.set(k, o);
+  }
+  return [...acc].map(([k, o]) => { const [a, b] = k.split('\u0000'); return { a, b: b || null, ...o }; }).filter((x) => x.n >= 2).sort((x, y) => y.s - x.s).slice(0, 3);
+}
+// Domicile probable : l'arrêt le plus proche de vous la nuit (20 h–7 h, ≥ 2 relevés), sinon l'arrêt de départ le plus fréquent le matin (4 h–9 h, ≥ 3 recherches).
+function homeStop(now = Date.now()) {
+  const m = loadMem(), pick = (rows, key, min) => {
+    const c = new Map(); rows.forEach((e) => { const o = c.get(e[key]) || { n: 0, s: 0 }; o.n++; o.s += weight(e, now); c.set(e[key], o); });
+    const best = [...c].sort((x, y) => y[1].s - x[1].s)[0]; return best && best[1].n >= min ? best[0] : null;
+  };
+  return pick(m.spots.filter((e) => e.h >= 20 || e.h < 7), 'stop', 2) || pick(m.trips.filter((e) => e.h >= 4 && e.h < 9), 'a', 3);
+}
+
+let nearby = []; // [{stop, m}] pour cette visite seulement
+function renderSuggestions() {
+  const t = T[lang], box = $('#sugg'); const items = [], seen = new Set();
+  const add = (label, q, cls) => { if (!seen.has(q) && items.length < 6) { seen.add(q); items.push(el('button', { className: 'chip ' + cls, type: 'button', textContent: label, onclick: () => { $('#q').value = q; ask(); } })); } };
+  nearby.slice(0, 2).forEach((n) => add(`📍 ${n.stop} · ${t.metersAway(n.m)}`, t.qFrom(n.stop), 'mine'));
+  const home = homeStop(); if (home) add(`🏠 ${home}`, t.qFrom(home), 'mine');
+  frequentTrips().forEach((x) => add(x.b ? `⭐ ${x.a} → ${x.b}` : `⭐ ${x.a}`, x.b ? t.qFromTo(x.a, x.b) : t.qFrom(x.a), 'mine'));
+  const m = loadMem();
+  if (m.trips.length || m.spots.length) items.push(el('button', { className: 'forget', type: 'button', textContent: t.forget, title: t.memNote, onclick: () => { try { localStorage.removeItem(MEM_KEY); } catch {} nearby = []; renderSuggestions(); } }));
+  box.replaceChildren(...items); box.hidden = !items.length;
+}
+
+// ---- Position : demandée seulement au clic (ou si déjà autorisée). Les positions des arrêts sont téléchargées et la distance est calculée ici : la position ne quitte pas l'appareil. ----
+let geoStops = null;
+const haversine = (la1, lo1, la2, lo2) => { const r = Math.PI / 180, dl = (la2 - la1) * r, dg = (lo2 - lo1) * r; const a = Math.sin(dl / 2) ** 2 + Math.cos(la1 * r) * Math.cos(la2 * r) * Math.sin(dg / 2) ** 2; return 12742e3 * Math.asin(Math.sqrt(a)); };
+function locate(silent) {
+  const t = T[lang], msg = $('#geomsg'), btn = $('#near');
+  const say = (txt) => { msg.textContent = txt || ''; msg.hidden = !txt; };
+  if (!navigator.geolocation) { if (!silent) say(t.geoDenied); return; }
+  btn.disabled = true; if (!silent) say(t.locating);
+  navigator.geolocation.getCurrentPosition(async (p) => {
+    try {
+      if (!geoStops) geoStops = (await (await fetch('/api/stops')).json()).stops || [];
+      const { latitude: la, longitude: lo } = p.coords;
+      if (la < -5 || la > -3.5 || lo < 55 || lo > 56.2) { nearby = []; say(t.geoOutside); }
+      else {
+        nearby = geoStops.map((s) => ({ stop: s.stop, m: haversine(la, lo, s.lat, s.lon) })).filter((n) => n.m <= 2000).sort((x, y) => x.m - y.m).slice(0, 3);
+        say(nearby.length ? '' : t.nearNone);
+        if (nearby.length && nearby[0].m <= 600) remember('spots', { stop: nearby[0].stop });
+      }
+    } catch (e) { say(t.geoDenied); }
+    finally { btn.disabled = false; renderSuggestions(); }
+  }, () => { btn.disabled = false; if (!silent) say(t.geoDenied); }, { timeout: 10000, maximumAge: 300000 });
+}
+$('#near').onclick = () => locate(false);
+// Si la localisation est déjà autorisée pour ce site, on propose directement les arrêts proches.
+try { navigator.permissions?.query({ name: 'geolocation' }).then((r) => { if (r.state === 'granted') locate(true); }).catch(() => {}); } catch {}
+$('#lang').onclick = () => { location.assign(lang === 'fr' ? '/en/' : '/'); };
+applyLang();
+</script>
+</body>
+</html>
