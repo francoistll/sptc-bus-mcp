@@ -1,0 +1,5 @@
+dl/
+venv/
+__pycache__/
+data/raw_*.json
+data/osm_*.json
