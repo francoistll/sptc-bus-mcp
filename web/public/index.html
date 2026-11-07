@@ -48,6 +48,12 @@
   .chips { display:flex; flex-wrap:wrap; gap:.45rem; margin-top:.9rem; }
   .chip { background:#e0f2fe; color:var(--deep); border:1px solid #bae6fd; border-radius:999px; padding:.3rem .8rem; cursor:pointer; font-size:.9rem; }
   .chip:hover { background:#bae6fd; }
+  .chip.mine { background:#fef3c7; border-color:#fde68a; color:#78350f; }
+  .chip.mine:hover { background:#fde68a; }
+  .btn2 { background:#fff; color:var(--deep); border:2px solid #bae6fd; border-radius:12px; padding:.6rem 1rem; font:inherit; font-weight:600; cursor:pointer; }
+  .btn2:hover { background:#e0f2fe; }
+  .btn2:disabled { opacity:.6; cursor:wait; }
+  .forget { background:none; border:0; color:#475569; font:inherit; font-size:.82rem; text-decoration:underline; cursor:pointer; padding:.2rem 0; margin-top:.4rem; }
   .hint { color:#475569; font-size:.88rem; }
   #out { margin-top:1.1rem; }
   .meta { color:#475569; font-size:.85rem; margin:.3rem 0 .6rem; }
@@ -141,8 +147,11 @@
     <textarea id="q" maxlength="300" data-iph="placeholder"></textarea>
     <div class="row">
       <button class="btn" id="go" type="button" data-i="go">Chercher</button>
+      <button class="btn2" id="near" type="button" data-i="near">📍 Près de moi</button>
       <span class="hint" data-i="hint">Heure des Seychelles (UTC+4) par défaut</span>
     </div>
+    <p class="hint" id="geomsg" role="status" hidden></p>
+    <div class="chips" id="sugg" aria-label="Suggestions"></div>
     <div class="chips" id="chips"></div>
     <div id="out" aria-live="polite"></div>
   </div>
@@ -183,7 +192,7 @@
 </main>
 
 <footer>
-  <div data-i-html="footer">Bus Seychelles · intégration non officielle · données © SPTC (horaires), © OpenStreetMap (positions)<br>Les questions posées sont conservées 60 jours, sans adresse IP, pour améliorer le service.</div>
+  <div data-i-html="footer">Bus Seychelles · intégration non officielle · données © SPTC (horaires), © OpenStreetMap (positions)<br>Les questions posées sont conservées 60 jours, sans adresse IP, pour améliorer le service. Votre position et vos recherches fréquentes restent sur votre appareil.</div>
 </footer>
 
 <script>
@@ -201,6 +210,10 @@ fr: {
   label: 'Votre question', placeholder: 'Ex. : prochain bus de Victoria à Beau Vallon après 16h',
   go: 'Chercher', hint: 'Heure des Seychelles (UTC+4) par défaut',
   examplesTitle: 'Exemples',
+  near: '📍 Près de moi', locating: 'Recherche de votre position…', nearNone: 'Aucun arrêt dont la position est connue à moins de 2 km. La position de beaucoup d’arrêts n’est pas encore connue : tapez plutôt votre question.',
+  geoDenied: 'Position refusée ou indisponible. Vous pouvez autoriser la localisation dans les réglages de votre navigateur.', geoOutside: 'Vous semblez hors de Mahé : suggestions de proximité indisponibles.',
+  forget: 'Effacer ma mémoire sur cet appareil', memNote: 'Vos recherches fréquentes et votre position restent sur votre appareil : rien n’est envoyé ni enregistré sur le serveur.',
+  qFrom: (a) => `prochain bus depuis ${a}`, qFromTo: (a, b) => `prochain bus de ${a} à ${b}`, home: 'domicile probable', metersAway: (m) => (m < 950 ? `${Math.round(m / 10) * 10} m` : `${(m / 1000).toFixed(1)} km`),
   ex: ['Prochain bus de Victoria à Beau Vallon', 'Bus de Beau Vallon à Victoria vers 17h30', 'Horaires de la ligne 20', 'Ligne 22 le week-end', 'Premier bus de Victoria à Anse Royale', 'Arrêts « Anse Etoile »'],
   loading: 'Recherche…',
   next: (n) => `${n} prochain(s) passage(s)`,
@@ -253,7 +266,7 @@ fr: {
     <p>La SPTC ne publie ni flux GTFS ni API : les tableaux de ces PDF ont été extraits automatiquement (pdfplumber), nettoyés, puis rangés dans une base SQLite. Cette extraction peut comporter des erreurs.</p>
     <p>Les positions des arrêts, quand elles existent, viennent d’<a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> (© contributeurs, licence ODbL) et sont souvent approximatives.</p>
     <p>Si vous êtes de la SPTC et souhaitez retirer ou corriger ces données, contactez l’auteur du site.</p>`,
-  footer: 'Bus Seychelles · intégration non officielle · données © SPTC (horaires), © OpenStreetMap (positions)<br>Les questions posées sont conservées 60 jours, sans adresse IP, pour améliorer le service.' ,
+  footer: 'Bus Seychelles · intégration non officielle · données © SPTC (horaires), © OpenStreetMap (positions)<br>Les questions posées sont conservées 60 jours, sans adresse IP, pour améliorer le service. Votre position et vos recherches fréquentes restent sur votre appareil.' ,
 },
 en: {
   banner: '⚠️ <b>Unofficial service</b>: this page is neither published nor endorsed by SPTC. Scheduled times only, no real-time data.',
@@ -263,6 +276,10 @@ en: {
   label: 'Your question', placeholder: 'e.g. next bus from Victoria to Beau Vallon after 4pm',
   go: 'Search', hint: 'Seychelles time (UTC+4) by default',
   examplesTitle: 'Examples',
+  near: '📍 Near me', locating: 'Finding your position…', nearNone: 'No stop with a known position within 2 km. Many stop positions are not known yet: please type your question instead.',
+  geoDenied: 'Location denied or unavailable. You can allow location in your browser settings.', geoOutside: 'You seem to be outside Mahé: nearby suggestions are unavailable.',
+  forget: 'Clear my memory on this device', memNote: 'Your frequent searches and your position stay on your device: nothing is sent to or stored on the server.',
+  qFrom: (a) => `next bus from ${a}`, qFromTo: (a, b) => `next bus from ${a} to ${b}`, home: 'likely home', metersAway: (m) => (m < 950 ? `${Math.round(m / 10) * 10} m` : `${(m / 1000).toFixed(1)} km`),
   ex: ['Next bus from Victoria to Beau Vallon', 'Bus from Beau Vallon to Victoria around 17:30', 'Timetable for route 20', 'Route 22 on weekends', 'First bus from Victoria to Anse Royale', 'Stops “Anse Etoile”'],
   loading: 'Searching…',
   next: (n) => `${n} upcoming departure(s)`,
@@ -315,7 +332,7 @@ en: {
     <p>SPTC publishes neither a GTFS feed nor an API: the tables in these PDFs were extracted automatically (pdfplumber), cleaned, and stored in a SQLite database. Extraction errors are possible.</p>
     <p>Stop positions, where available, come from <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> (© contributors, ODbL) and are often approximate.</p>
     <p>If you are from SPTC and want this data removed or corrected, please contact the site author.</p>`,
-  footer: 'Bus Seychelles · unofficial integration · data © SPTC (timetables), © OpenStreetMap (positions)<br>Questions are kept for 60 days, without IP address, to improve the service.',
+  footer: 'Bus Seychelles · unofficial integration · data © SPTC (timetables), © OpenStreetMap (positions)<br>Questions are kept for 60 days, without IP address, to improve the service. Your position and frequent searches stay on your device.',
 }};
 
 const fmtDur = (m) => (m >= 60 ? `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')}` : `${m} min`);
@@ -334,6 +351,7 @@ function applyLang() {
   $('footer div').innerHTML = t.footer + repoLink(lang === 'fr');
   const chips = $('#chips'); chips.replaceChildren(el('span', { className: 'hint', textContent: t.examplesTitle + ' :' }));
   t.ex.forEach((x) => chips.append(el('button', { className: 'chip', type: 'button', textContent: x, onclick: () => { $('#q').value = x; ask(); } })));
+  if (typeof renderSuggestions === 'function') renderSuggestions();
 }
 
 async function ask() {
@@ -347,6 +365,7 @@ async function ask() {
     const d = await r.json();
     if (!d.ok) { out.replaceChildren(el('p', { className: 'err', textContent: t.error })); return; }
     render(d);
+    if (d.intent === 'next' && d.rows?.length && d.rows[0].sa) { remember('trips', { a: d.rows[0].sa, b: d.rows[0].sb || null }); renderSuggestions(); }
   } catch (e) { out.replaceChildren(el('p', { className: 'err', textContent: t.error })); }
   finally { btn.disabled = false; }
 }
@@ -418,6 +437,73 @@ function render(d) {
 
 $('#go').onclick = ask;
 $('#q').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) ask(); });
+// ---- Mémoire locale : tout reste dans le navigateur (localStorage), rien n'est envoyé au serveur ----
+const MEM_KEY = 'busMemory.v1';
+const loadMem = () => { try { const m = JSON.parse(localStorage.getItem(MEM_KEY)); return { trips: m?.trips || [], spots: m?.spots || [] }; } catch { return { trips: [], spots: [] }; } };
+const saveMem = (m) => { try { localStorage.setItem(MEM_KEY, JSON.stringify(m)); } catch {} };
+const scHour = (ts) => new Date(ts + 4 * 3600e3).getUTCHours(); // heure des Seychelles
+const weight = (e, now) => Math.pow(0.5, (now - e.t) / (30 * 864e5)); // les habitudes récentes comptent plus (demi-vie 30 jours)
+const hdiff = (a, b) => { const d = Math.abs(a - b) % 24; return Math.min(d, 24 - d); };
+function remember(kind, rec) {
+  const m = loadMem(); const now = Date.now();
+  if (kind === 'spots') { const last = m.spots[m.spots.length - 1]; if (last && now - last.t < 6 * 3600e3) return; } // un relevé de position toutes les 6 h au plus
+  m[kind].push({ ...rec, t: now, h: scHour(now) }); m[kind] = m[kind].slice(-200); saveMem(m);
+}
+// Trajets fréquents : au moins 2 recherches, pondérées par la récence et l'heure de la journée (±3 h : ×2).
+function frequentTrips(now = Date.now()) {
+  const h = scHour(now), acc = new Map();
+  for (const e of loadMem().trips) {
+    const k = e.a + '\u0000' + (e.b || ''); const o = acc.get(k) || { n: 0, s: 0 };
+    o.n++; o.s += weight(e, now) * (hdiff(e.h, h) <= 3 ? 2 : 1); acc.set(k, o);
+  }
+  return [...acc].map(([k, o]) => { const [a, b] = k.split('\u0000'); return { a, b: b || null, ...o }; }).filter((x) => x.n >= 2).sort((x, y) => y.s - x.s).slice(0, 3);
+}
+// Domicile probable : l'arrêt le plus proche de vous la nuit (20 h–7 h, ≥ 2 relevés), sinon l'arrêt de départ le plus fréquent le matin (4 h–9 h, ≥ 3 recherches).
+function homeStop(now = Date.now()) {
+  const m = loadMem(), pick = (rows, key, min) => {
+    const c = new Map(); rows.forEach((e) => { const o = c.get(e[key]) || { n: 0, s: 0 }; o.n++; o.s += weight(e, now); c.set(e[key], o); });
+    const best = [...c].sort((x, y) => y[1].s - x[1].s)[0]; return best && best[1].n >= min ? best[0] : null;
+  };
+  return pick(m.spots.filter((e) => e.h >= 20 || e.h < 7), 'stop', 2) || pick(m.trips.filter((e) => e.h >= 4 && e.h < 9), 'a', 3);
+}
+
+let nearby = []; // [{stop, m}] pour cette visite seulement
+function renderSuggestions() {
+  const t = T[lang], box = $('#sugg'); const items = [], seen = new Set();
+  const add = (label, q, cls) => { if (!seen.has(q) && items.length < 6) { seen.add(q); items.push(el('button', { className: 'chip ' + cls, type: 'button', textContent: label, onclick: () => { $('#q').value = q; ask(); } })); } };
+  nearby.slice(0, 2).forEach((n) => add(`📍 ${n.stop} · ${t.metersAway(n.m)}`, t.qFrom(n.stop), 'mine'));
+  const home = homeStop(); if (home) add(`🏠 ${home}`, t.qFrom(home), 'mine');
+  frequentTrips().forEach((x) => add(x.b ? `⭐ ${x.a} → ${x.b}` : `⭐ ${x.a}`, x.b ? t.qFromTo(x.a, x.b) : t.qFrom(x.a), 'mine'));
+  const m = loadMem();
+  if (m.trips.length || m.spots.length) items.push(el('button', { className: 'forget', type: 'button', textContent: t.forget, title: t.memNote, onclick: () => { try { localStorage.removeItem(MEM_KEY); } catch {} nearby = []; renderSuggestions(); } }));
+  box.replaceChildren(...items); box.hidden = !items.length;
+}
+
+// ---- Position : demandée seulement au clic (ou si déjà autorisée). Les positions des arrêts sont téléchargées et la distance est calculée ici : la position ne quitte pas l'appareil. ----
+let geoStops = null;
+const haversine = (la1, lo1, la2, lo2) => { const r = Math.PI / 180, dl = (la2 - la1) * r, dg = (lo2 - lo1) * r; const a = Math.sin(dl / 2) ** 2 + Math.cos(la1 * r) * Math.cos(la2 * r) * Math.sin(dg / 2) ** 2; return 12742e3 * Math.asin(Math.sqrt(a)); };
+function locate(silent) {
+  const t = T[lang], msg = $('#geomsg'), btn = $('#near');
+  const say = (txt) => { msg.textContent = txt || ''; msg.hidden = !txt; };
+  if (!navigator.geolocation) { if (!silent) say(t.geoDenied); return; }
+  btn.disabled = true; if (!silent) say(t.locating);
+  navigator.geolocation.getCurrentPosition(async (p) => {
+    try {
+      if (!geoStops) geoStops = (await (await fetch('/api/stops')).json()).stops || [];
+      const { latitude: la, longitude: lo } = p.coords;
+      if (la < -5 || la > -3.5 || lo < 55 || lo > 56.2) { nearby = []; say(t.geoOutside); }
+      else {
+        nearby = geoStops.map((s) => ({ stop: s.stop, m: haversine(la, lo, s.lat, s.lon) })).filter((n) => n.m <= 2000).sort((x, y) => x.m - y.m).slice(0, 3);
+        say(nearby.length ? '' : t.nearNone);
+        if (nearby.length && nearby[0].m <= 600) remember('spots', { stop: nearby[0].stop });
+      }
+    } catch (e) { say(t.geoDenied); }
+    finally { btn.disabled = false; renderSuggestions(); }
+  }, () => { btn.disabled = false; if (!silent) say(t.geoDenied); }, { timeout: 10000, maximumAge: 300000 });
+}
+$('#near').onclick = () => locate(false);
+// Si la localisation est déjà autorisée pour ce site, on propose directement les arrêts proches.
+try { navigator.permissions?.query({ name: 'geolocation' }).then((r) => { if (r.state === 'granted') locate(true); }).catch(() => {}); } catch {}
 $('#lang').onclick = () => { lang = lang === 'fr' ? 'en' : 'fr'; localStorage.setItem('lang', lang); applyLang(); };
 applyLang();
 </script>
