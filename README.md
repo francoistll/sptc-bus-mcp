@@ -89,6 +89,8 @@ ceux d'OSM désignent des arrêts physiques (commerce, lieu-dit) : l'appariement
 
 ## Site web public (sans MCP) — `web/`
 
+**En ligne : https://bus-seychelles.pages.dev** (intégration non officielle, hébergée sur Cloudflare Pages).
+
 Une page « Bus Seychelles » avec un textarea en langage naturel, des exemples cliquables, la documentation et la
 source des données (liens vers les PDF officiels, mention « intégration non officielle »), bilingue FR/EN et
 optimisée mobile. Une IA gratuite (Cloudflare Workers AI) ne sert qu'à **comprendre la question** ; les horaires

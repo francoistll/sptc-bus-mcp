@@ -6,7 +6,7 @@ pages_build_output_dir = "public"
 [[d1_databases]]
 binding = "DB"
 database_name = "sptc-bus"
-database_id = "REMPLACE-MOI"
+database_id = "0cb80d4f-4ea6-4346-bdc2-9c98605b1a82"
 
 # LLM gratuit de Cloudflare (quota quotidien) — sert uniquement à comprendre la question.
 [ai]

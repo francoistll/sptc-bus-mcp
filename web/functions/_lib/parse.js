@@ -1,5 +1,5 @@
 // Interprétation de la question : LLM (Workers AI) en premier, analyse par règles en secours.
-const MODEL = '@cf/meta/llama-3.1-8b-instruct';
+const MODEL = '@cf/meta/llama-3.1-8b-instruct-fp8';
 
 const clean = (s) => (typeof s === 'string' ? s.trim().slice(0, 60) || null : null);
 
