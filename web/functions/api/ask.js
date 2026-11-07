@@ -62,6 +62,11 @@ async function handle({ request, env }, emit = () => {}) {
       if (reason === 'no_direct') {
         const tr = await transferDepartures(db, { depart: parsed.depart, arrivee: parsed.arrivee, after, day });
         if (tr.length) return json({ ...base, intent: 'transfer', rows: tr });
+        // Rien aujourd'hui : existe-t-il un trajet (direct ou avec correspondance) l'autre type de jour ?
+        const od = day === 'weekday' ? 'weekend' : 'weekday';
+        const o = (await nextDepartures(db, { depart: parsed.depart, arrivee: parsed.arrivee, after: '00:00', day: od, limit: 1 })).length ||
+          (await transferDepartures(db, { depart: parsed.depart, arrivee: parsed.arrivee, after: '00:00', day: od, limit: 1 })).length;
+        if (o) return json({ ...base, intent: 'next', rows: [], reason: 'other_day', otherDay: od, suggestions: [] });
       }
       const sug = reason === 'no_arrivee_stop' ? sugA : sugD;
       return json({ ...base, intent: 'next', rows: [], reason, suggestions: sug.map((x) => x.stop) });
