@@ -83,9 +83,10 @@ export async function tripDetail(db, id) {
   if (!head.results.length) return null;
   const r = await db
     .prepare(
-      `select ss.seq, ss.stop, st.time from service_stops ss
+      `select ss.seq, ss.stop, st.time, g.lat, g.lon from service_stops ss
        join trips t on t.service_id = ss.service_id and t.id = ?
        left join stop_times st on st.trip_id = t.id and st.seq = ss.seq
+       left join stops_geo g on g.stop = ss.stop
        order by ss.seq`
     )
     .bind(id)

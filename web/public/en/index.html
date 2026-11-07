@@ -228,7 +228,7 @@ fr: {
   cNext: ['Départ', 'Ligne', 'Arrêt de départ', 'Arrivée', 'Arrêt d’arrivée', 'Durée'],
   lastN: (n) => `${n} derniers passages de la journée`,
   tapHint: 'Touchez une ligne pour voir tous les arrêts du trajet.', tripLoading: 'Chargement du trajet…', tripErr: 'Détail indisponible.',
-  board: 'Montée', alight: 'Descente', tripSum: (m, n) => `${m ? 'Trajet de ' + fmtDur(m) + ' · ' : ''}${n} arrêts`,
+  board: 'Montée', mapsLink: 'Voir le trajet sur Google Maps', alight: 'Descente', tripSum: (m, n) => `${m ? 'Trajet de ' + fmtDur(m) + ' · ' : ''}${n} arrêts`,
   firstN: (n) => `${n} premiers passages de la journée`,
   needFrom: (stop) => `Pour aller à « ${stop} », indiquez votre arrêt de départ, par exemple « de Victoria à ${stop} ».`,
   routesAt: 'Lignes qui desservent cet arrêt :',
@@ -295,7 +295,7 @@ en: {
   cNext: ['Departs', 'Route', 'From stop', 'Arrives', 'To stop', 'Duration'],
   lastN: (n) => `Last ${n} departures of the day`,
   tapHint: 'Tap a row to see every stop of the trip.', tripLoading: 'Loading trip…', tripErr: 'Details unavailable.',
-  board: 'Board', alight: 'Get off', tripSum: (m, n) => `${m ? 'Trip of ' + fmtDur(m) + ' · ' : ''}${n} stops`,
+  board: 'Board', mapsLink: 'View the route on Google Maps', alight: 'Get off', tripSum: (m, n) => `${m ? 'Trip of ' + fmtDur(m) + ' · ' : ''}${n} stops`,
   firstN: (n) => `First ${n} departures of the day`,
   needFrom: (stop) => `To go to “${stop}”, tell me where you start, for example “from Victoria to ${stop}”.`,
   routesAt: 'Routes serving this stop:',
@@ -414,6 +414,21 @@ function table(head, rows, cls = 'grid', trips) {
   return el('div', { className: 'scroll' }, el('table', { className: cls }, el('thead', {}, th), el('tbody', {}, body)));
 }
 
+// Lien Google Maps : itinéraire routier du bus entre montée et descente (arrêts intermédiaires en étapes, 9 max).
+// Les arrêts sans position GPS sont donnés par leur nom : Google Maps les situe approximativement.
+function mapsLink(stops, row) {
+  const seg = stops.filter((s) => s.seq >= row.qa && (row.qb == null || s.seq <= row.qb));
+  if (seg.length < 2) return '';
+  const pt = (s) => (s.lat != null ? `${s.lat},${s.lon}` : `${s.stop}, Mahé, Seychelles`);
+  const mid = seg.slice(1, -1), k = Math.min(9, mid.length);
+  const via = k ? Array.from({ length: k }, (_, i) => mid[Math.floor(((i + 0.5) * mid.length) / k)]) : [];
+  const u = new URL('https://www.google.com/maps/dir/');
+  u.searchParams.set('api', '1'); u.searchParams.set('travelmode', 'driving');
+  u.searchParams.set('origin', pt(seg[0])); u.searchParams.set('destination', pt(seg[seg.length - 1]));
+  if (via.length) u.searchParams.set('waypoints', via.map(pt).join('|'));
+  return el('p', { className: 'meta' }, el('a', { href: u.href, target: '_blank', rel: 'noopener', textContent: '🗺️ ' + T[lang].mapsLink }));
+}
+
 async function toggleTrip(tr, row, ncols) {
   const t = T[lang], open = tr.nextElementSibling?.classList.contains('detail');
   if (open) { tr.nextElementSibling.remove(); tr.setAttribute('aria-expanded', 'false'); return; }
@@ -435,7 +450,7 @@ async function toggleTrip(tr, row, ncols) {
       ol.append(li);
     });
     const sum = el('div', { className: 'meta', textContent: t.tripSum(row.dur, d.stops.length) });
-    td.replaceChildren(sum, el('div', { className: 'tripbox' }, ol));
+    td.replaceChildren(sum, el('div', { className: 'tripbox' }, ol), mapsLink(d.stops, row));
     ol.querySelector('li.a')?.scrollIntoView({ block: 'nearest' });
   } catch (e) { td.replaceChildren(el('p', { className: 'err', textContent: t.tripErr })); }
 }
