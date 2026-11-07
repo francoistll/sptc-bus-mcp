@@ -204,6 +204,7 @@ fr: {
   loading: 'Recherche…',
   next: (n) => `${n} prochain(s) passage(s)`,
   cNext: ['Départ', 'Ligne', 'Arrêt de départ', 'Arrivée', 'Arrêt d’arrivée', 'Durée'],
+  lastN: (n) => `${n} derniers passages de la journée`,
   tapHint: 'Touchez une ligne pour voir tous les arrêts du trajet.', tripLoading: 'Chargement du trajet…', tripErr: 'Détail indisponible.',
   board: 'Montée', alight: 'Descente', tripSum: (m, n) => `${m ? 'Trajet de ' + fmtDur(m) + ' · ' : ''}${n} arrêts`,
   none: 'Aucun passage trouvé. Essayez un autre arrêt ou une autre heure.',
@@ -254,6 +255,7 @@ en: {
   loading: 'Searching…',
   next: (n) => `${n} upcoming departure(s)`,
   cNext: ['Departs', 'Route', 'From stop', 'Arrives', 'To stop', 'Duration'],
+  lastN: (n) => `Last ${n} departures of the day`,
   tapHint: 'Tap a row to see every stop of the trip.', tripLoading: 'Loading trip…', tripErr: 'Details unavailable.',
   board: 'Board', alight: 'Get off', tripSum: (m, n) => `${m ? 'Trip of ' + fmtDur(m) + ' · ' : ''}${n} stops`,
   none: 'No departure found. Try another stop or time.',
@@ -372,7 +374,7 @@ function render(d) {
       nodes.push(el('p', { textContent: t.none }));
       if (d.suggestions?.length) nodes.push(el('p', { className: 'hint', textContent: t.suggest + ' ' + d.suggestions.join(', ') }));
     } else {
-      nodes.push(el('h3', { textContent: t.next(d.rows.length) }), el('div', { className: 'meta', textContent: meta }));
+      nodes.push(el('h3', { textContent: d.last ? t.lastN(d.rows.length) : t.next(d.rows.length) }), el('div', { className: 'meta', textContent: d.last ? meta.replace(/ · [^·]*\d\d:\d\d · /, ' · ') : meta }));
       nodes.push(el('div', { className: 'meta', textContent: t.tapHint }));
       nodes.push(table(t.cNext, d.rows.map((r) => [r.ta, el('span', {}, el('span', { className: 'tag', textContent: r.route }), ' ', el('span', { className: 'hint', textContent: r.title.replace(/^Route\s+\S+\s*/i, '') })), r.sa, r.tb || '–', r.sb || '–', r.dur != null ? fmtDur(r.dur) : '–']), 'cards', d.rows));
     }

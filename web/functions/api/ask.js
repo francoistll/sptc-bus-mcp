@@ -28,11 +28,12 @@ export async function onRequestPost({ request, env }) {
   const stops = await stopNames(db);
   const { parsed, via } = await parseQuestion(env, question, stops);
   const day = parsed.day || now.day;
-  const after = parsed.time || now.time;
-  const base = { ok: true, via, parsed, day, after, now: now.time, notice: { fr: VALID_FR, en: VALID_EN } };
+  const last = !!parsed.last && !parsed.time;
+  const after = last ? '00:00' : parsed.time || now.time;
+  const base = { ok: true, via, parsed, day, after, last, now: now.time, notice: { fr: VALID_FR, en: VALID_EN } };
 
   if (parsed.intent === 'next' && parsed.depart) {
-    const rows = await nextDepartures(db, { depart: parsed.depart, arrivee: parsed.arrivee, after, day });
+    const rows = await nextDepartures(db, { depart: parsed.depart, arrivee: parsed.arrivee, after, day, last });
     if (!rows.length) {
       const sug = await findStops(db, parsed.depart);
       return json({ ...base, intent: 'next', rows: [], suggestions: sug.map((s) => s.stop) });

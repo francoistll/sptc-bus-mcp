@@ -8,18 +8,18 @@ function sanitize(o) {
   const time = typeof o?.time === 'string' && /^\d{1,2}:\d{2}$/.test(o.time) ? o.time.padStart(5, '0') : null;
   const day = o?.day === 'weekend' || o?.day === 'weekday' ? o.day : null;
   const route = typeof o?.route === 'string' && /^[0-9A-Za-z]{1,4}$/.test(o.route.trim()) ? o.route.trim().toUpperCase() : null;
-  return { intent, depart: clean(o?.depart), arrivee: clean(o?.arrivee), time, day, route, query: clean(o?.query) };
+  return { intent, depart: clean(o?.depart), arrivee: clean(o?.arrivee), time, day, route, query: clean(o?.query), last: o?.last === true || o?.last === 'true' };
 }
 
 // Secours sans LLM : « de X à Y », « from X to Y », « ligne 20 », « 16h30 », « week-end ».
 export function parseByRules(q) {
   const t = q.trim();
-  const out = { intent: 'unknown', depart: null, arrivee: null, time: null, day: null, route: null, query: null };
+  const out = { intent: 'unknown', depart: null, arrivee: null, time: null, day: null, route: null, query: null, last: /\b(derniers?|dernières?|last|final)\b/i.test(t) };
   if (/week-?end|samedi|dimanche|saturday|sunday/i.test(t)) out.day = 'weekend';
   else if (/semaine|lundi|mardi|mercredi|jeudi|vendredi|weekday|monday|tuesday|wednesday|thursday|friday/i.test(t)) out.day = 'weekday';
   const hm = t.match(/\b(\d{1,2})\s*(?:h|:)\s*(\d{2})?\b/i);
   if (hm && +hm[1] < 24) out.time = `${hm[1].padStart(2, '0')}:${hm[2] || '00'}`;
-  const ft = t.match(/(?<![\wÀ-ÿ])(?:de|depuis|from)\s+(.+?)\s+(?:à|a|au|aux|vers|pour|to|->|→)\s+(.+?)(?:\s+(?:vers|à partir|apres|après|after|around|at|le|la|ce|ce soir|demain)\b|[?.,;]|\s+\d{1,2}\s*[h:]|$)/i);
+  const ft = t.match(/(?<![\wÀ-ÿ])(?:de|depuis|from)\s+(.+?)\s+(?:à|a|au|aux|vers|pour|to|->|→)\s+(.+?)(?:\s+(?:vers|à partir|apres|après|after|around|at|le|la|ce|ce soir|demain|aujourd.?hui|today|tomorrow|maintenant|now)\b|[?.,;]|\s+\d{1,2}\s*[h:]|$)/i);
   if (ft) {
     out.intent = 'next'; out.depart = clean(ft[1]); out.arrivee = clean(ft[2]);
     return out;
@@ -36,8 +36,9 @@ export async function parseQuestion(env, question, stops) {
   const rules = parseByRules(question);
   if (!env.AI) return { parsed: rules, via: 'rules' };
   const system = `Tu extrais une requête d'horaires de bus (Mahé, Seychelles) en JSON strict, sans texte autour.
-Schéma : {"intent":"next|line|stop|unknown","depart":string|null,"arrivee":string|null,"time":"HH:MM"|null,"day":"weekday|weekend|null","route":string|null,"query":string|null}
+Schéma : {"intent":"next|line|stop|unknown","depart":string|null,"arrivee":string|null,"time":"HH:MM"|null,"day":"weekday|weekend|null","route":string|null,"query":string|null,"last":boolean}
 - next = prochains bus (depart obligatoire, arrivee si donnée) ; line = horaires d'une ligne (route = numéro, ex "20" ou "24A") ; stop = recherche d'un arrêt (query).
+- last = true si l'utilisateur demande les DERNIERS bus de la journée (« derniers bus », « last bus »), sinon false.
 - time = heure demandée en 24 h, null si absente. day = weekend pour samedi/dimanche/week-end, weekday pour semaine, sinon null.
 - depart et arrivee : choisis le nom EXACT de cette liste d'arrêts qui correspond le mieux, sinon recopie le mot de l'utilisateur.
 Arrêts : ${stops.slice(0, 160).join(' | ')}
@@ -52,7 +53,13 @@ Si la question ne concerne pas les bus, renvoie {"intent":"unknown"}. Ne répond
     const a = text.indexOf('{'), b = text.lastIndexOf('}');
     if (a < 0 || b <= a) throw new Error('pas de JSON');
     const p = sanitize(JSON.parse(text.slice(a, b + 1)));
-    if (p.intent === 'unknown') return { parsed: p, via: 'llm' };
+    // Garde-fous : le LLM invente parfois un jour, une heure ou une ligne que la question ne contient pas.
+    p.day = rules.day;                                   // jour : seulement s'il est écrit (« samedi », « week-end »…)
+    if (!/\d/.test(question)) p.time = null;             // heure : seulement si la question contient un chiffre
+    if (p.intent === 'next') p.route = null;             // une ligne n'a de sens que pour intent « line »
+    if (p.intent === 'line' && !new RegExp('(^|[^0-9A-Za-z])' + (p.route || '@@') + '([^0-9A-Za-z]|$)', 'i').test(question)) p.intent = 'unknown';
+    p.last = p.last && rules.last;                        // « derniers » seulement s'il est écrit
+    if (p.intent === 'unknown' && rules.intent !== 'unknown') return { parsed: rules, via: 'rules' }; // le LLM s'est trompé : on retombe sur les règles
     return { parsed: p, via: 'llm' };
   } catch (e) {
     return { parsed: rules, via: 'rules' }; // quota épuisé, erreur réseau, JSON invalide…

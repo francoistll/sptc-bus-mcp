@@ -33,7 +33,7 @@ export async function findStops(db, name) {
   return r.results;
 }
 
-export async function nextDepartures(db, { depart, arrivee, after, day, limit = 8 }) {
+export async function nextDepartures(db, { depart, arrivee, after, day, limit = 8, last = false }) {
   const args = [like(depart)];
   let join = 'left join stop_times b on 0';
   if (arrivee) {
@@ -45,10 +45,10 @@ export async function nextDepartures(db, { depart, arrivee, after, day, limit = 
     from services s join trips t on t.service_id = s.id
     join stop_times a on a.trip_id = t.id and a.stop like ? escape '\\'
     ${join}
-    where s.day_type = ? and a.time >= ? order by a.time limit ?`;
+    where s.day_type = ? and a.time >= ? order by a.time ${last ? 'desc' : ''} limit ?`;
   // Ordre des paramètres : depart, [arrivee], day, after, limit
   const r = await db.prepare(sql).bind(...args).all();
-  return r.results;
+  return last ? r.results.reverse() : r.results;
 }
 
 export async function lineTimetable(db, { route, day }) {
