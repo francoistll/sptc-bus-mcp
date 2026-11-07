@@ -177,7 +177,7 @@
       <h3>Sample sentences</h3>
       <ul><li><code>next bus from Victoria to Beau Vallon</code></li><li><code>from Beau Vallon to Victoria around 17:30</code></li><li><code>timetable route 24A saturday</code></li><li><code>stop Glacis</code></li></ul>
       <h3>Limits</h3>
-      <ul><li>No real-time data (delays, cancellations).</li><li>Direct trips only, no transfers.</li><li>Stop GPS positions are incomplete.</li></ul>
+      <ul><li>No real-time data (delays, cancellations).</li><li>Direct trips, or with a single transfer (3 min minimum).</li><li>Stop GPS positions are incomplete.</li></ul>
     </div></div></div>
   </section>
 
@@ -225,6 +225,8 @@ fr: {
   ex: ['Prochain bus de Victoria à Beau Vallon', 'Bus de Beau Vallon à Victoria vers 17h30', 'Horaires de la ligne 20', 'Ligne 22 le week-end', 'Premier bus de Victoria à Anse Royale', 'Arrêts « Anse Etoile »'],
   loading: 'Recherche…', steps: { stops: 'Lecture de la liste des arrêts', parse: 'Compréhension de votre question', search: 'Recherche des horaires' }, stepsWait: 'Merci de patienter, cela prend quelques secondes.',
   next: (n) => `${n} prochain(s) passage(s)`,
+  cTransfer: ['Départ', 'Bus 1', 'Correspondance', 'Bus 2', 'Arrivée', 'Durée'],
+  transferTitle: 'Pas de bus direct : trajets avec une correspondance', transferAt: (x, a, b) => `${x} (arrivée ${a}, départ ${b})`,
   cNext: ['Départ', 'Ligne', 'Arrêt de départ', 'Arrivée', 'Arrêt d’arrivée', 'Durée'],
   lastN: (n) => `${n} derniers passages de la journée`,
   tapHint: 'Touchez une ligne pour voir tous les arrêts du trajet.', tripLoading: 'Chargement du trajet…', tripErr: 'Détail indisponible.',
@@ -260,7 +262,7 @@ fr: {
       <h3>Exemples de phrases</h3>
       <ul><li><code>prochain bus de Victoria à Beau Vallon</code></li><li><code>de Beau Vallon à Victoria vers 17h30</code></li><li><code>horaires ligne 24A samedi</code></li><li><code>arrêt Glacis</code></li></ul>
       <h3>Limites</h3>
-      <ul><li>Pas de temps réel (retards, annulations).</li><li>Trajets directs seulement, pas de correspondances.</li><li>Positions GPS partielles des arrêts.</li></ul>
+      <ul><li>Pas de temps réel (retards, annulations).</li><li>Trajets directs, ou avec une seule correspondance (3 min de battement minimum).</li><li>Positions GPS partielles des arrêts.</li></ul>
     </div></div>`,
   srcTitle: 'D’où viennent les données ?',
   srcBody: `
@@ -292,6 +294,8 @@ en: {
   ex: ['Next bus from Victoria to Beau Vallon', 'Bus from Beau Vallon to Victoria around 17:30', 'Timetable for route 20', 'Route 22 on weekends', 'First bus from Victoria to Anse Royale', 'Stops “Anse Etoile”'],
   loading: 'Searching…', steps: { stops: 'Reading the list of stops', parse: 'Understanding your question', search: 'Looking up the timetables' }, stepsWait: 'Please wait, this takes a few seconds.',
   next: (n) => `${n} upcoming departure(s)`,
+  cTransfer: ['Departs', 'Bus 1', 'Change at', 'Bus 2', 'Arrives', 'Duration'],
+  transferTitle: 'No direct bus: trips with one transfer', transferAt: (x, a, b) => `${x} (arrive ${a}, depart ${b})`,
   cNext: ['Departs', 'Route', 'From stop', 'Arrives', 'To stop', 'Duration'],
   lastN: (n) => `Last ${n} departures of the day`,
   tapHint: 'Tap a row to see every stop of the trip.', tripLoading: 'Loading trip…', tripErr: 'Details unavailable.',
@@ -327,7 +331,7 @@ en: {
       <h3>Sample sentences</h3>
       <ul><li><code>next bus from Victoria to Beau Vallon</code></li><li><code>from Beau Vallon to Victoria around 17:30</code></li><li><code>timetable route 24A saturday</code></li><li><code>stop Glacis</code></li></ul>
       <h3>Limits</h3>
-      <ul><li>No real-time data (delays, cancellations).</li><li>Direct trips only, no transfers.</li><li>Stop GPS positions are incomplete.</li></ul>
+      <ul><li>No real-time data (delays, cancellations).</li><li>Direct trips, or with a single transfer (3 min minimum).</li><li>Stop GPS positions are incomplete.</li></ul>
     </div></div>`,
   srcTitle: 'Where does the data come from?',
   srcBody: `
@@ -467,6 +471,9 @@ function render(d) {
       nodes.push(el('div', { className: 'meta', textContent: t.tapHint }));
       nodes.push(table(t.cNext, d.rows.map((r) => [r.ta, el('span', {}, el('span', { className: 'tag', textContent: r.route }), ' ', el('span', { className: 'hint', textContent: r.title.replace(/^Route\s+\S+\s*/i, '') })), r.sa, r.tb || '–', r.sb ? (r.term ? `${r.sb} · ${t.terminus}` : r.sb) : '–', r.dur != null ? fmtDur(r.dur) : '–']), 'cards', d.rows));
     }
+  } else if (d.intent === 'transfer') {
+    nodes.push(el('h3', { textContent: t.transferTitle }), el('div', { className: 'meta', textContent: meta }));
+    nodes.push(table(t.cTransfer, d.rows.map((r) => [r.ta, el('span', { className: 'tag', textContent: r.r1 }), t.transferAt(r.sx, r.tx1, r.tx2), el('span', { className: 'tag', textContent: r.r2 }), r.tb, r.dur != null ? fmtDur(r.dur) : '–'])));
   } else if (d.intent === 'need_from') {
     nodes.push(el('p', { textContent: t.needFrom(d.arrivee) }));
     if (d.routes?.length) nodes.push(el('p', {}, el('span', { className: 'hint', textContent: t.routesAt + ' ' }), d.routes.map((r) => el('span', {}, el('span', { className: 'tag', textContent: r }), ' '))));

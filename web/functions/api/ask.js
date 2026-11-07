@@ -1,4 +1,4 @@
-import { seychellesNow, stopNames, findStops, nextDepartures, lineTimetable, minutesBetween, VALID_FR, VALID_EN } from '../_lib/query.js';
+import { seychellesNow, stopNames, findStops, nextDepartures, transferDepartures, lineTimetable, minutesBetween, VALID_FR, VALID_EN } from '../_lib/query.js';
 import { parseQuestion } from '../_lib/parse.js';
 
 const json = (o, status = 200) =>
@@ -58,6 +58,10 @@ async function handle({ request, env }, emit = () => {}) {
       else if (parsed.arrivee) {
         const any = await nextDepartures(db, { depart: parsed.depart, arrivee: parsed.arrivee, after: '00:00', day, limit: 1 });
         reason = any.length ? 'none_after' : 'no_direct';
+      }
+      if (reason === 'no_direct') {
+        const tr = await transferDepartures(db, { depart: parsed.depart, arrivee: parsed.arrivee, after, day });
+        if (tr.length) return json({ ...base, intent: 'transfer', rows: tr });
       }
       const sug = reason === 'no_arrivee_stop' ? sugA : sugD;
       return json({ ...base, intent: 'next', rows: [], reason, suggestions: sug.map((x) => x.stop) });

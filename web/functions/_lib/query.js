@@ -53,6 +53,31 @@ export async function nextDepartures(db, { depart, arrivee, after, day, limit = 
   return last ? r.results.reverse() : r.results;
 }
 
+// Une correspondance : bus 1 de `depart` jusqu'à un arrêt commun X, puis bus 2 de X jusqu'à `arrivee`
+// (au moins 3 min de battement). Un résultat par 2e bus.
+export async function transferDepartures(db, { depart, arrivee, after, day, limit = 5 }) {
+  const sql = `select s1.route r1, t1.id trip1, a.stop sa, a.time ta, b.stop sx, b.time tx1,
+      s2.route r2, t2.id trip2, c.time tx2, d.stop sb, d.time tb
+    from stop_times a
+    join trips t1 on t1.id = a.trip_id join services s1 on s1.id = t1.service_id and s1.day_type = ?
+    join stop_times b on b.trip_id = t1.id and b.seq > a.seq
+    join stop_times c on c.stop = b.stop and c.trip_id != t1.id and c.time >= time(b.time, '+3 minutes')
+    join trips t2 on t2.id = c.trip_id join services s2 on s2.id = t2.service_id and s2.day_type = ?
+    join stop_times d on d.trip_id = t2.id and d.seq > c.seq and d.stop like ? escape '\\'
+    where a.stop like ? escape '\\' and a.time >= ? and b.stop != '' and b.stop not like ? escape '\\'
+    order by a.time, d.time limit 600`;
+  const r = await db.prepare(sql).bind(day, day, like(arrivee), like(depart), after, like(arrivee)).all();
+  const best = new Map();
+  for (const x of r.results) {
+    const k = x.trip2; // un seul résultat par 2e bus : le dernier bus 1 qui permet encore la correspondance
+    if (!best.has(k) || x.ta > best.get(k).ta || (x.ta === best.get(k).ta && x.tb < best.get(k).tb)) best.set(k, x);
+  }
+  const out = [...best.values()].sort((u, v) => (u.ta < v.ta ? -1 : u.ta > v.ta ? 1 : 0)).slice(0, limit);
+  const kept = out;
+  kept.forEach((x) => { x.dur = minutesBetween(x.ta, x.tb); });
+  return kept;
+}
+
 export async function lineTimetable(db, { route, day }) {
   const services = (
     await db.prepare('select id, title from services where day_type = ? and route = ? order by id').bind(day, route).all()
