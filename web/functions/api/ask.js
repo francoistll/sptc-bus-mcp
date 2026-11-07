@@ -1,4 +1,4 @@
-import { seychellesNow, stopNames, findStops, nextDepartures, lineTimetable, VALID_FR, VALID_EN } from '../_lib/query.js';
+import { seychellesNow, stopNames, findStops, nextDepartures, lineTimetable, minutesBetween, VALID_FR, VALID_EN } from '../_lib/query.js';
 import { parseQuestion } from '../_lib/parse.js';
 
 const json = (o, status = 200) =>
@@ -37,6 +37,7 @@ export async function onRequestPost({ request, env }) {
       const sug = await findStops(db, parsed.depart);
       return json({ ...base, intent: 'next', rows: [], suggestions: sug.map((s) => s.stop) });
     }
+    rows.forEach((r) => { r.dur = minutesBetween(r.ta, r.tb); });
     return json({ ...base, intent: 'next', rows });
   }
   if (parsed.intent === 'line' && parsed.route) {

@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 const f = new URL('./public/index.html', import.meta.url);
 let html = fs.readFileSync(f, 'utf8');
-const m = html.match(/const T = (\{[\s\S]*?\});?\s*\n\s*let lang/);
+const m = html.match(/const T = (\{[\s\S]*?\});?\s*\n(?:\s*const fmtDur[^\n]*\n)?\s*let lang/);
 if (!m) throw new Error('bloc T introuvable');
 const g = (n) => (html.match(new RegExp("const " + n + " = '([^']*)'")) || [])[1] || '';
 const T = vm.runInNewContext('(' + m[1] + ')', { PDF_WD: g('PDF_WD'), PDF_WE: g('PDF_WE'), REPO: g('REPO') });

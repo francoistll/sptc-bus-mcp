@@ -41,7 +41,7 @@ export async function nextDepartures(db, { depart, arrivee, after, day, limit = 
     args.push(like(arrivee));
   }
   args.push(day, after, Math.max(1, Math.min(limit, 20)));
-  const sql = `select s.route, s.title, a.stop sa, a.time ta, b.stop sb, b.time tb
+  const sql = `select s.route, s.title, t.id trip, a.stop sa, a.seq qa, a.time ta, b.stop sb, b.seq qb, b.time tb
     from services s join trips t on t.service_id = s.id
     join stop_times a on a.trip_id = t.id and a.stop like ? escape '\\'
     ${join}
@@ -68,4 +68,28 @@ export async function lineTimetable(db, { route, day }) {
     out.push({ title: s.title, stops, rows });
   }
   return out;
+}
+
+// Détail d'un trajet : tous les arrêts du service, avec l'heure de passage de ce trajet (null si non indiquée).
+export async function tripDetail(db, id) {
+  const head = await db.prepare('select s.route, s.title, s.day_type from trips t join services s on s.id = t.service_id where t.id = ?').bind(id).all();
+  if (!head.results.length) return null;
+  const r = await db
+    .prepare(
+      `select ss.seq, ss.stop, st.time from service_stops ss
+       join trips t on t.service_id = ss.service_id and t.id = ?
+       left join stop_times st on st.trip_id = t.id and st.seq = ss.seq
+       order by ss.seq`
+    )
+    .bind(id)
+    .all();
+  return { ...head.results[0], stops: r.results };
+}
+
+// Durée en minutes entre deux heures « HH:MM » (passage minuit géré) ; null si une heure manque.
+export function minutesBetween(a, b) {
+  const m = (x) => (/^\d{1,2}:\d{2}$/.test(x || '') ? +x.slice(0, x.indexOf(':')) * 60 + +x.slice(-2) : null);
+  const x = m(a), y = m(b);
+  if (x === null || y === null) return null;
+  return (y - x + 1440) % 1440;
 }
