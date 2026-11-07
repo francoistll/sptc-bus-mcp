@@ -36,10 +36,15 @@ async function handle({ request, env }, emit = () => {}) {
   lap('parse');
   emit('search');
   const tomorrowDay = seychellesNow(new Date(Date.now() + 86400000)).day;
-  const day = parsed.day || (parsed.tomorrow ? tomorrowDay : now.day);
   const last = !!parsed.last && !parsed.time;
   const first = !last && !!parsed.first && !parsed.time;
-  const after = last || first ? '00:00' : parsed.time || (parsed.tomorrow ? '00:00' : now.time);
+  // Jour de la semaine nommé (« lundi », « on Monday ») différent d'aujourd'hui : on cherche dès le début de la journée.
+  const DOW = [['dimanche|sunday', 0], ['lundi|monday', 1], ['mardi|tuesday', 2], ['mercredi|wednesday', 3], ['jeudi|thursday', 4], ['vendredi|friday', 5], ['samedi|saturday', 6]];
+  const named = DOW.find(([re]) => new RegExp('(?<![\\wÀ-ÿ])(?:' + re + ')(?![\\wÀ-ÿ])', 'i').test(question));
+  const otherDay = !!named && named[1] !== now.dow;
+  if (named && !parsed.day) parsed.day = named[1] === 0 || named[1] === 6 ? 'weekend' : 'weekday';
+  const day = parsed.day || (parsed.tomorrow ? tomorrowDay : now.day);
+  const after = last || first ? '00:00' : parsed.time || (parsed.tomorrow || otherDay ? '00:00' : now.time);
   const base = { ok: true, via, ms, parsed, day, after, last, first, tomorrow: !!parsed.tomorrow, now: now.time, notice: { fr: VALID_FR, en: VALID_EN } };
 
   if (parsed.intent === 'next' && !parsed.depart && parsed.arrivee) {

@@ -10,7 +10,7 @@ export function seychellesNow(d = new Date()) {
   const hh = String(t.getUTCHours()).padStart(2, '0');
   const mm = String(t.getUTCMinutes()).padStart(2, '0');
   const dow = t.getUTCDay(); // 0 = dimanche
-  return { time: `${hh}:${mm}`, day: dow === 0 || dow === 6 ? 'weekend' : 'weekday' };
+  return { dow, time: `${hh}:${mm}`, day: dow === 0 || dow === 6 ? 'weekend' : 'weekday' };
 }
 
 let stopCache = null;
