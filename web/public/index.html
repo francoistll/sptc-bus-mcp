@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#075985">
 <title>Horaires des bus Seychelles (Mahé, SPTC) — prochain bus, lignes et arrêts</title>
 <meta name="description" content="Horaires des bus de Mahé (Seychelles) : demandez « prochain bus de Victoria à Beau Vallon » en langage naturel. Lignes, arrêts et horaires SPTC, août 2026. Service non officiel, gratuit.">
+<meta name="google-site-verification" content="Lguw7Gf9Ax0o85dpeaOsOwgIZE9REsqbFfyHeIMyUoY" />
 <meta name="robots" content="index, follow, max-snippet:-1">
 <link rel="canonical" href="https://bus-seychelles.pages.dev/">
 <meta property="og:type" content="website">
@@ -182,7 +183,7 @@
 </main>
 
 <footer>
-  <div data-i-html="footer">Bus Seychelles · intégration non officielle · données © SPTC (horaires), © OpenStreetMap (positions)</div>
+  <div data-i-html="footer">Bus Seychelles · intégration non officielle · données © SPTC (horaires), © OpenStreetMap (positions)<br>Les questions posées sont conservées 60 jours, sans adresse IP, pour améliorer le service.</div>
 </footer>
 
 <script>
@@ -252,7 +253,7 @@ fr: {
     <p>La SPTC ne publie ni flux GTFS ni API : les tableaux de ces PDF ont été extraits automatiquement (pdfplumber), nettoyés, puis rangés dans une base SQLite. Cette extraction peut comporter des erreurs.</p>
     <p>Les positions des arrêts, quand elles existent, viennent d’<a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> (© contributeurs, licence ODbL) et sont souvent approximatives.</p>
     <p>Si vous êtes de la SPTC et souhaitez retirer ou corriger ces données, contactez l’auteur du site.</p>`,
-  footer: 'Bus Seychelles · intégration non officielle · données © SPTC (horaires), © OpenStreetMap (positions)' ,
+  footer: 'Bus Seychelles · intégration non officielle · données © SPTC (horaires), © OpenStreetMap (positions)<br>Les questions posées sont conservées 60 jours, sans adresse IP, pour améliorer le service.' ,
 },
 en: {
   banner: '⚠️ <b>Unofficial service</b>: this page is neither published nor endorsed by SPTC. Scheduled times only, no real-time data.',
@@ -314,7 +315,7 @@ en: {
     <p>SPTC publishes neither a GTFS feed nor an API: the tables in these PDFs were extracted automatically (pdfplumber), cleaned, and stored in a SQLite database. Extraction errors are possible.</p>
     <p>Stop positions, where available, come from <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> (© contributors, ODbL) and are often approximate.</p>
     <p>If you are from SPTC and want this data removed or corrected, please contact the site author.</p>`,
-  footer: 'Bus Seychelles · unofficial integration · data © SPTC (timetables), © OpenStreetMap (positions)',
+  footer: 'Bus Seychelles · unofficial integration · data © SPTC (timetables), © OpenStreetMap (positions)<br>Questions are kept for 60 days, without IP address, to improve the service.',
 }};
 
 const fmtDur = (m) => (m >= 60 ? `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')}` : `${m} min`);

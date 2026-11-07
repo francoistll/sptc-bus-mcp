@@ -15,7 +15,7 @@ function limited(ip) {
   return arr.length > 12;
 }
 
-export async function onRequestPost({ request, env }) {
+async function handle({ request, env }) {
   const ip = request.headers.get('cf-connecting-ip') || 'x';
   if (limited(ip)) return json({ ok: false, error: 'rate_limit' }, 429);
   let body;
@@ -65,4 +65,28 @@ export async function onRequestPost({ request, env }) {
     return json({ ...base, intent: 'stop', stops: await findStops(db, parsed.query) });
   }
   return json({ ...base, intent: 'unknown' });
+}
+
+// Journal minimal (pas d'IP) pour le contrôle quotidien des réponses ; texte expurgé (e-mails, longs nombres).
+const redact = (q) => q.replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, '[email]').replace(/\d[\d\s().+-]{6,}\d/g, '[nombre]').slice(0, 300);
+
+export async function onRequestPost(ctx) {
+  let question = '';
+  try { question = String((await ctx.request.clone().json())?.q || ''); } catch {}
+  const res = await handle(ctx);
+  if (res.status === 200 && ctx.env.DB) {
+    try {
+      const j = await res.clone().json();
+      const n = (j.rows || j.stops || j.tables || []).length;
+      const p = j.parsed || {};
+      ctx.waitUntil(
+        ctx.env.DB.prepare('insert into query_log values (?,?,?,?,?,?,?,?,?,?)')
+          .bind(new Date().toISOString(), redact(question), j.via || null, j.intent || null, n, p.depart || null, p.arrivee || null, p.route || null, p.time || null, p.day || null)
+          .run()
+          .then(() => (Math.random() < 0.02 ? ctx.env.DB.prepare("delete from query_log where ts < datetime('now','-60 days')").run() : null))
+          .catch(() => {})
+      );
+    } catch {}
+  }
+  return res;
 }
