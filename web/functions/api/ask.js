@@ -1,4 +1,4 @@
-import { seychellesNow, stopNames, routesServing, findStops, nextDepartures, transferDepartures, lineTimetable, minutesBetween, VALID_FR, VALID_EN } from '../_lib/query.js';
+import { useAssets, seychellesNow, stopNames, routesServing, findStops, nextDepartures, transferDepartures, lineTimetable, minutesBetween, VALID_FR, VALID_EN } from '../_lib/query.js';
 import { parseQuestion } from '../_lib/parse.js';
 
 const json = (o, status = 200) =>
@@ -16,6 +16,7 @@ function limited(ip) {
 }
 
 async function handle({ request, env }, emit = () => {}) {
+  useAssets(env, request.url);
   const ip = request.headers.get('cf-connecting-ip') || 'x';
   if (limited(ip)) return json({ ok: false, error: 'rate_limit' }, 429);
   let body;

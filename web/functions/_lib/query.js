@@ -13,139 +13,129 @@ export function seychellesNow(d = new Date()) {
   return { dow, time: `${hh}:${mm}`, day: dow === 0 || dow === 6 ? 'weekend' : 'weekday' };
 }
 
-// Cache en deux niveaux (mémoire de l'instance, puis Cache API de Cloudflare, partagée entre instances)
-// pour des données statiques : évite de relire la base D1 (quota gratuit de lectures de lignes par jour).
-const mem = new Map();
-async function cached(key, ttl, fn) {
-  const m = mem.get(key);
-  if (m && m.exp > Date.now()) return m.v;
-  let cache = null, req = null;
-  try { cache = caches.default; req = new Request('https://cache.internal/' + encodeURIComponent(key)); } catch {}
-  if (cache) {
-    try {
-      const hit = await cache.match(req);
-      if (hit) { const v = await hit.json(); mem.set(key, { v, exp: Date.now() + ttl * 1000 }); return v; }
-    } catch {}
-  }
-  const v = await fn();
-  mem.set(key, { v, exp: Date.now() + ttl * 1000 });
-  if (mem.size > 200) mem.clear();
-  if (cache) {
-    try { await cache.put(req, new Response(JSON.stringify(v), { headers: { 'content-type': 'application/json', 'cache-control': `public, max-age=${ttl}` } })); } catch {}
-  }
-  return v;
+// Horaires lus dans /timetable.json (fichier statique du site, compressé par Cloudflare) et interrogés en mémoire :
+// plus aucune lecture D1 (quota gratuit), et pas d'aller-retour réseau. D1 ne sert plus qu'aux journaux.
+let assets = null; // { fetcher, base } : liaison ASSETS de Pages
+export function useAssets(env, url) { if (env && env.ASSETS) assets = { fetcher: env.ASSETS, base: url }; }
+
+let loading = null;
+function load() {
+  if (loading) return loading;
+  loading = (async () => {
+    let raw = globalThis.__TIMETABLE; // tests locaux
+    if (!raw) {
+      if (!assets) throw new Error('timetable: liaison ASSETS absente');
+      const r = await assets.fetcher.fetch(new Request(new URL('/timetable.json', assets.base)));
+      if (!r.ok) throw new Error('timetable: HTTP ' + r.status);
+      raw = await r.json();
+    }
+    const svc = new Map(raw.sv.map((x) => [x[0], { id: x[0], day: x[1], route: x[2], title: x[3] }]));
+    const trip = new Map(), byService = new Map();
+    for (const [id, sid, no] of raw.tr) {
+      const t = { id, svc: svc.get(sid), no };
+      trip.set(id, t);
+      if (!byService.has(sid)) byService.set(sid, []);
+      byService.get(sid).push(t);
+    }
+    for (const l of byService.values()) l.sort((u, v) => u.no - v.no || u.id - v.id);
+    const byTrip = new Map(), byStop = new Map(), count = new Map();
+    for (const [t, seq, stop, time] of raw.st) {
+      const r = { t, seq, stop, time };
+      if (!byTrip.has(t)) byTrip.set(t, []);
+      byTrip.get(t).push(r);
+      if (stop === '') continue;
+      if (!byStop.has(stop)) byStop.set(stop, []);
+      byStop.get(stop).push(r);
+      count.set(stop, (count.get(stop) || 0) + 1);
+    }
+    for (const l of byTrip.values()) l.sort((u, v) => u.seq - v.seq);
+    const stopsOf = new Map();
+    for (const [sid, seq, stop] of raw.ss) {
+      if (!stopsOf.has(sid)) stopsOf.set(sid, []);
+      stopsOf.get(sid).push({ seq, stop });
+    }
+    for (const l of stopsOf.values()) l.sort((u, v) => u.seq - v.seq);
+    const geo = new Map(raw.geo.map((x) => [x[0], { lat: x[1], lon: x[2], quality: x[3] }]));
+    const list = [...count].map(([stop, n]) => ({ stop, n })).sort((u, v) => v.n - u.n);
+    return { svc, trip, byService, byTrip, byStop, stopsOf, geo, list, services: [...svc.values()].sort((u, v) => u.id - v.id) };
+  })();
+  loading.catch(() => { loading = null; });
+  return loading;
 }
 
-// Liste des arrêts avec leur nombre de passages (1 balayage de la table, ensuite en cache 24 h).
-async function stopList(db) {
-  return cached('stoplist:v1', 86400, async () => {
-    const r = await db.prepare("select stop, count(*) n from stop_times where stop != '' group by stop order by n desc").all();
-    return r.results;
-  });
-}
-export async function stopNames(db) {
-  return (await stopList(db)).map((x) => x.stop);
-}
+// Seychelles : liste d'arrêts avec leur nombre de passages, du plus desservi au moins desservi.
+export async function stopNames() { return (await load()).list.map((x) => x.stop); }
 
-// Noms exacts d'arrêts contenant `name` (comme LIKE '%name%', insensible à la casse), résolus en mémoire :
-// les requêtes SQL peuvent alors utiliser l'index sur stop_times.stop au lieu de balayer la table.
-async function resolveStops(db, name, max = 60) {
+// Noms exacts d'arrêts contenant `name` (comme LIKE '%name%', insensible à la casse).
+function resolve(tt, name, max = 60) {
   const q = String(name).toLowerCase();
-  return (await stopList(db)).filter((x) => x.stop.toLowerCase().includes(q)).slice(0, max);
-}
-const marks = (n) => Array(n).fill('?').join(',');
-
-export async function findStops(db, name) {
-  const found = (await resolveStops(db, name)).slice(0, 20);
-  if (!found.length) return [];
-  const geo = await cached('geo:v1', 86400, async () => (await db.prepare('select stop, lat, lon, quality from stops_geo').all()).results);
-  const g = new Map(geo.map((x) => [x.stop, x]));
-  return found.map((x) => ({ stop: x.stop, n: x.n, lat: g.get(x.stop)?.lat ?? null, lon: g.get(x.stop)?.lon ?? null, quality: g.get(x.stop)?.quality ?? null }));
+  return tt.list.filter((x) => x.stop.toLowerCase().includes(q)).slice(0, max);
 }
 
-export async function routesServing(db, name) {
-  const st = (await resolveStops(db, name)).map((x) => x.stop);
-  if (!st.length) return [];
-  const r = await db
-    .prepare(`select distinct s.route from stop_times a join trips t on t.id = a.trip_id join services s on s.id = t.service_id where a.stop in (${marks(st.length)}) order by s.route`)
-    .bind(...st)
-    .all();
-  return r.results.map((x) => x.route);
-}
-
-export async function nextDepartures(db, { depart, arrivee, after, day, limit = 8, last = false }) {
-  const dep = (await resolveStops(db, depart)).map((x) => x.stop);
-  if (!dep.length) return [];
-  const args = [...dep];
-  // Sans arrivée demandée : on affiche le terminus (dernier arrêt du trajet) et son heure.
-  let join = 'left join stop_times b on b.trip_id = t.id and b.seq = (select max(x.seq) from stop_times x where x.trip_id = t.id) and b.seq > a.seq';
-  if (arrivee) {
-    const arr = (await resolveStops(db, arrivee)).map((x) => x.stop);
-    if (!arr.length) return [];
-    join = `join stop_times b on b.trip_id = t.id and b.stop in (${marks(arr.length)}) and b.seq > a.seq`;
-    args.push(...arr);
-  }
-  args.push(day, after, Math.max(1, Math.min(limit, 20)));
-  const sql = `select s.route, s.title, t.id trip, a.stop sa, a.seq qa, a.time ta, b.stop sb, b.seq qb, b.time tb
-    from services s join trips t on t.service_id = s.id
-    join stop_times a on a.trip_id = t.id and a.stop in (${marks(dep.length)})
-    ${join}
-    where s.day_type = ? and a.time >= ? order by a.time ${last ? 'desc' : ''} limit ?`;
-  // Ordre des paramètres : départs, [arrivées], day, after, limit
-  const r = await db.prepare(sql).bind(...args).all();
-  if (!arrivee) r.results.forEach((x) => { if (x.sb) x.term = 1; });
-  return last ? r.results.reverse() : r.results;
-}
-
-// Horaire complet (stop_times + trips + services, ~11 000 lignes), lu une fois puis gardé 24 h (mémoire + Cache API).
-// Les correspondances se calculent en mémoire : la jointure SQL équivalente lisait ~150 000 lignes D1 par question.
-async function timetable(db) {
-  const raw = await cached('timetable:v1', 86400, async () => {
-    const [st, tr, sv] = await Promise.all([
-      db.prepare("select trip_id, seq, stop, time from stop_times where stop != ''").all(),
-      db.prepare('select id, service_id from trips').all(),
-      db.prepare('select id, route, day_type from services').all(),
-    ]);
-    return { st: st.results.map((x) => [x.trip_id, x.seq, x.stop, x.time]), tr: tr.results.map((x) => [x.id, x.service_id]), sv: sv.results.map((x) => [x.id, x.route, x.day_type]) };
+export async function findStops(_db, name) {
+  const tt = await load();
+  return resolve(tt, name).slice(0, 20).map((x) => {
+    const g = tt.geo.get(x.stop);
+    return { stop: x.stop, n: x.n, lat: g?.lat ?? null, lon: g?.lon ?? null, quality: g?.quality ?? null };
   });
-  if (raw._idx) return raw._idx;
-  const svc = new Map(raw.sv.map((x) => [x[0], { route: x[1], day: x[2] }]));
-  const trip = new Map(raw.tr.map((x) => [x[0], svc.get(x[1])]));
-  const byTrip = new Map(), byStop = new Map();
-  for (const [t, seq, stop, time] of raw.st) {
-    const r = { t, seq, stop, time };
-    if (!byTrip.has(t)) byTrip.set(t, []);
-    byTrip.get(t).push(r);
-    if (!byStop.has(stop)) byStop.set(stop, []);
-    byStop.get(stop).push(r);
-  }
-  for (const l of byTrip.values()) l.sort((u, v) => u.seq - v.seq);
-  const idx = { trip, byTrip, byStop };
-  Object.defineProperty(raw, '_idx', { value: idx, enumerable: false });
-  return idx;
 }
+
+export async function routesServing(_db, name) {
+  const tt = await load();
+  const out = new Set();
+  for (const { stop } of resolve(tt, name)) for (const r of tt.byStop.get(stop)) out.add(tt.trip.get(r.t).svc.route);
+  return [...out].sort();
+}
+
+// Arrêts positionnés (api/stops.js).
+export async function geoStops() {
+  const tt = await load();
+  return [...tt.geo].filter(([, g]) => g.lat !== null && ['arret_osm', 'lieu_approx'].includes(g.quality)).map(([stop, g]) => ({ stop, lat: g.lat, lon: g.lon, quality: g.quality })).sort((u, v) => (u.stop < v.stop ? -1 : u.stop > v.stop ? 1 : 0));
+}
+
+export async function nextDepartures(_db, { depart, arrivee, after, day, limit = 8, last = false }) {
+  const tt = await load();
+  const dep = resolve(tt, depart).map((x) => x.stop);
+  const arr = arrivee ? new Set(resolve(tt, arrivee).map((x) => x.stop)) : null;
+  if (!dep.length || (arr && !arr.size)) return [];
+  const rows = [];
+  for (const sa of dep) for (const a of tt.byStop.get(sa)) {
+    const t = tt.trip.get(a.t);
+    if (t.svc.day !== day || !(a.time >= after)) continue;
+    const tr = tt.byTrip.get(a.t);
+    const mk = (b) => ({ route: t.svc.route, title: t.svc.title, trip: t.id, sa: a.stop, qa: a.seq, ta: a.time, sb: b ? b.stop : null, qb: b ? b.seq : null, tb: b ? b.time : null });
+    if (arr) { for (const b of tr) if (b.seq > a.seq && arr.has(b.stop)) rows.push(mk(b)); }
+    else { const b = tr[tr.length - 1]; rows.push(mk(b.seq > a.seq ? b : null)); }
+  }
+  rows.sort((u, v) => (u.ta < v.ta ? -1 : u.ta > v.ta ? 1 : 0) * (last ? -1 : 1));
+  const out = rows.slice(0, Math.max(1, Math.min(limit, 20)));
+  if (!arr) out.forEach((x) => { if (x.sb) x.term = 1; });
+  return last ? out.reverse() : out;
+}
+
 const toMin = (x) => (/^\d{1,2}:\d{2}$/.test(x || '') ? +x.slice(0, x.indexOf(':')) * 60 + +x.slice(-2) : null);
 
 // Une correspondance : bus 1 de `depart` jusqu'à un arrêt commun X, puis bus 2 de X jusqu'à `arrivee`
 // (plus de 3 min de battement). Un résultat par 2e bus.
-export async function transferDepartures(db, { depart, arrivee, after, day, limit = 5 }) {
-  const dep = new Set((await resolveStops(db, depart)).map((x) => x.stop));
-  const arr = new Set((await resolveStops(db, arrivee)).map((x) => x.stop));
+export async function transferDepartures(_db, { depart, arrivee, after, day, limit = 5 }) {
+  const tt = await load();
+  const dep = new Set(resolve(tt, depart).map((x) => x.stop));
+  const arr = new Set(resolve(tt, arrivee).map((x) => x.stop));
   if (!dep.size || !arr.size) return [];
-  const { trip, byTrip, byStop } = await timetable(db);
-  // Bus 2 possibles : trajets du bon type de jour qui atteignent l'arrivée (arrêts d'arrivée d, par trajet).
+  const { trip, byTrip, byStop } = tt;
+  // Bus 2 possibles : trajets du bon type de jour qui atteignent l'arrivée.
   const dByTrip = new Map();
   for (const st of arr) for (const d of byStop.get(st) || []) {
-    if (trip.get(d.t)?.day !== day) continue;
+    if (trip.get(d.t).svc.day !== day) continue;
     if (!dByTrip.has(d.t)) dByTrip.set(d.t, []);
     dByTrip.get(d.t).push(d);
   }
   // Bus 1 : à chaque arrêt X atteint après le départ (hors arrivée), le bus pris et l'heure d'arrivée en X.
   const bByStop = new Map();
   for (const sa of dep) for (const a of byStop.get(sa) || []) {
-    if (a.time < after || trip.get(a.t)?.day !== day) continue;
+    if (!(a.time >= after) || trip.get(a.t).svc.day !== day) continue;
     for (const b of byTrip.get(a.t)) {
-      if (b.seq <= a.seq || arr.has(b.stop) || toMin(b.time) === null) continue;
+      if (b.seq <= a.seq || b.stop === '' || arr.has(b.stop) || toMin(b.time) === null) continue;
       if (!bByStop.has(b.stop)) bByStop.set(b.stop, []);
       bByStop.get(b.stop).push({ a, b });
     }
@@ -159,7 +149,7 @@ export async function transferDepartures(db, { depart, arrivee, after, day, limi
       for (const { a, b } of bl) {
         if (a.t === t2 || cm <= toMin(b.time) + 3) continue;
         for (const d of ds) if (d.seq > c.seq)
-          rows.push({ r1: trip.get(a.t).route, trip1: a.t, sa: a.stop, ta: a.time, sx: b.stop, tx1: b.time, r2: trip.get(t2).route, trip2: t2, tx2: c.time, sb: d.stop, tb: d.time });
+          rows.push({ r1: trip.get(a.t).svc.route, trip1: a.t, sa: a.stop, ta: a.time, sx: b.stop, tx1: b.time, r2: trip.get(t2).svc.route, trip2: t2, tx2: c.time, sb: d.stop, tb: d.time });
       }
     }
   }
@@ -171,53 +161,34 @@ export async function transferDepartures(db, { depart, arrivee, after, day, limi
     if (!best.has(k) || x.ta > best.get(k).ta || (x.ta === best.get(k).ta && x.tb < best.get(k).tb)) best.set(k, x);
   }
   const out = [...best.values()].sort((u, v) => (u.ta < v.ta ? -1 : u.ta > v.ta ? 1 : 0)).slice(0, limit);
-  const kept = out;
-  kept.forEach((x) => { x.dur = minutesBetween(x.ta, x.tb); });
-  return kept;
+  out.forEach((x) => { x.dur = minutesBetween(x.ta, x.tb); });
+  return out;
 }
 
-export async function lineTimetable(db, { route, day }) {
-  return cached(`line:v1:${day}:${route}`, 3600, () => lineTimetableDb(db, { route, day }));
-}
-async function lineTimetableDb(db, { route, day }) {
-  const services = (
-    await db.prepare('select id, title from services where day_type = ? and route = ? order by id').bind(day, route).all()
-  ).results;
-  if (!services.length) return [];
-  // Une seule requête groupée (db.batch) au lieu d'une requête par trajet.
-  const res = await db.batch(
-    services.flatMap((s) => [
-      db.prepare('select stop from service_stops where service_id = ? order by seq').bind(s.id),
-      db.prepare('select t.id trip, st.seq, st.time from trips t left join stop_times st on st.trip_id = t.id where t.service_id = ? order by t.trip_no, t.id').bind(s.id),
-    ])
-  );
-  return services.map((s, k) => {
-    const stops = res[2 * k].results.map((x) => x.stop);
-    const byTrip = new Map();
-    for (const r of res[2 * k + 1].results) {
-      if (!byTrip.has(r.trip)) byTrip.set(r.trip, {});
-      if (r.seq !== null) byTrip.get(r.trip)[r.seq] = r.time;
-    }
-    const rows = [...byTrip.values()].map((tm) => stops.map((_, i) => tm[i] || '–'));
+export async function lineTimetable(_db, { route, day }) {
+  const tt = await load();
+  return tt.services.filter((s) => s.day === day && s.route === route).map((s) => {
+    const stops = (tt.stopsOf.get(s.id) || []).map((x) => x.stop);
+    const rows = (tt.byService.get(s.id) || []).map((t) => {
+      const tm = {};
+      for (const r of tt.byTrip.get(t.id) || []) tm[r.seq] = r.time;
+      return stops.map((_, i) => tm[i] || '–');
+    });
     return { title: s.title, stops, rows };
   });
 }
 
 // Détail d'un trajet : tous les arrêts du service, avec l'heure de passage de ce trajet (null si non indiquée).
-export async function tripDetail(db, id) {
-  const head = await db.prepare('select s.route, s.title, s.day_type from trips t join services s on s.id = t.service_id where t.id = ?').bind(id).all();
-  if (!head.results.length) return null;
-  const r = await db
-    .prepare(
-      `select ss.seq, ss.stop, st.time, g.lat, g.lon from service_stops ss
-       join trips t on t.service_id = ss.service_id and t.id = ?
-       left join stop_times st on st.trip_id = t.id and st.seq = ss.seq
-       left join stops_geo g on g.stop = ss.stop
-       order by ss.seq`
-    )
-    .bind(id)
-    .all();
-  return { ...head.results[0], stops: r.results };
+export async function tripDetail(_db, id) {
+  const tt = await load();
+  const t = tt.trip.get(id);
+  if (!t) return null;
+  const times = new Map((tt.byTrip.get(id) || []).map((r) => [r.seq, r.time]));
+  const stops = (tt.stopsOf.get(t.svc.id) || []).map((x) => {
+    const g = tt.geo.get(x.stop);
+    return { seq: x.seq, stop: x.stop, time: times.get(x.seq) ?? null, lat: g?.lat ?? null, lon: g?.lon ?? null };
+  });
+  return { route: t.svc.route, title: t.svc.title, day_type: t.svc.day, stops };
 }
 
 // Durée en minutes entre deux heures « HH:MM » (passage minuit géré) ; null si une heure manque.

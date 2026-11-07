@@ -1,7 +1,7 @@
 // Serveur MCP public (Streamable HTTP, sans état, réponses JSON) : horaires théoriques des bus SPTC (Mahé, Seychelles).
 // Même base D1 que le site. Lecture seule, sans authentification, aucune donnée utilisateur enregistrée.
 // Intégration NON OFFICIELLE : non affiliée à la SPTC.
-import { seychellesNow, findStops, nextDepartures, lineTimetable, minutesBetween, VALID_FR } from './_lib/query.js';
+import { useAssets, seychellesNow, findStops, nextDepartures, lineTimetable, minutesBetween, VALID_FR } from './_lib/query.js';
 
 const VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05'];
 const CORS = {
@@ -134,6 +134,7 @@ const reply = (body, status = 200) =>
   new Response(body == null ? null : JSON.stringify(body), { status, headers: { ...CORS, ...(body == null ? {} : { 'content-type': 'application/json; charset=utf-8' }), 'cache-control': 'no-store' } });
 
 export async function onRequest({ request, env, waitUntil }) {
+  useAssets(env, request.url);
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
   if (request.method !== 'POST') return new Response('Méthode non autorisée : ce serveur MCP accepte POST (Streamable HTTP, sans état).', { status: 405, headers: { ...CORS, allow: 'POST, OPTIONS' } });
   const ip = request.headers.get('cf-connecting-ip') || 'x';
