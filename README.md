@@ -97,6 +97,12 @@ optimisée mobile. Une IA gratuite (Cloudflare Workers AI) ne sert qu'à **compr
 viennent toujours de la base D1 : l'IA n'en invente jamais. Sans quota IA, une analyse par règles prend le relais.
 Déploiement gratuit pas à pas : [`web/DEPLOY.md`](web/DEPLOY.md).
 
+## Contact et signalement d'erreurs
+
+Pour signaler un horaire faux, une question mal comprise ou pour toute demande (y compris de la SPTC) :
+[ouvrir une issue](https://github.com/francoistll/sptc-bus-mcp/issues/new) sur ce dépôt (un compte GitHub est nécessaire).
+Ce service est une intégration **non officielle**, non affiliée à la SPTC.
+
 ## Hébergement du MCP
 
 Le serveur est sans état, le conteneur est minuscule (base : ~350 Ko). Avec le `Dockerfile` fourni :
