@@ -103,6 +103,12 @@ Pour signaler un horaire faux, une question mal comprise ou pour toute demande (
 [ouvrir une issue](https://github.com/francoistll/sptc-bus-mcp/issues/new) sur ce dépôt (un compte GitHub est nécessaire).
 Ce service est une intégration **non officielle**, non affiliée à la SPTC.
 
+## Serveur MCP public (même domaine que le site)
+
+`https://bus-seychelles.pages.dev/mcp` : serveur MCP distant (Streamable HTTP, sans état, lecture seule, sans authentification) qui interroge la même base D1 que le site
+(`web/functions/mcp.js`). Outils : `chercher_arret`, `prochains_passages`, `horaires_ligne`. Mode d'emploi pour Claude : https://bus-seychelles.pages.dev/claude
+(Claude Code : `claude mcp add --transport http bus-seychelles https://bus-seychelles.pages.dev/mcp`). Limite : 60 requêtes/minute/IP. Service **non officiel**.
+
 ## Hébergement du MCP
 
 Le serveur est sans état, le conteneur est minuscule (base : ~350 Ko). Avec le `Dockerfile` fourni :

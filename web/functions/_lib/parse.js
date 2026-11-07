@@ -59,7 +59,9 @@ function sanitize(o) {
   const day = o?.day === 'weekend' || o?.day === 'weekday' ? o.day : null;
   const route = typeof o?.route === 'string' && /^[0-9A-Za-z]{1,4}$/.test(o.route.trim()) ? o.route.trim().toUpperCase() : null;
   const b = (v) => v === true || v === 'true';
-  return { intent, depart: clean(o?.depart), arrivee: clean(o?.arrivee), time, day, route, query: clean(o?.query), last: b(o?.last), first: b(o?.first) };
+  // « à 17h » n'est pas un arrêt : une heure reçue comme lieu est ignorée.
+  const place = (v) => { const c = clean(v); return c && !/^\d{1,2}\s*(?:h|:|am|pm)\s*\d{0,2}\s*(?:am|pm)?$/i.test(c) ? c : null; };
+  return { intent, depart: place(o?.depart), arrivee: place(o?.arrivee), time, day, route, query: clean(o?.query), last: b(o?.last), first: b(o?.first) };
 }
 
 // Secours sans LLM : noms d'arrêts connus, « de X à Y », « from X to Y », « ligne 20 », heures, jours.
@@ -141,6 +143,9 @@ Stop list: ${stops.slice(0, 160).join(' | ')}`;
 
 export async function parseQuestion(env, question, stops) {
   const rules = parseByRules(question, stops);
+  const isTimeWord = (v) => typeof v === 'string' && /^\d{1,2}\s*(?:h|:|am|pm)\s*\d{0,2}\s*(?:am|pm)?$/i.test(v.trim());
+  if (isTimeWord(rules.arrivee)) rules.arrivee = null;
+  if (isTimeWord(rules.depart)) rules.depart = null;
   const finish = (p, via, why) => {
     // Extras déduits du texte seul, jamais du LLM : demain, heure approximative.
     p.tomorrow = rules.tomorrow;

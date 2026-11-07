@@ -199,7 +199,8 @@
 const REPO = 'https://github.com/francoistll/sptc-bus-mcp'; // ex. 'https://github.com/<toi>/sptc-bus-mcp' — laisse vide pour masquer le lien
 const PDF_WD = 'https://sptc.sc/wp-content/uploads/2026/08/SPTC_Weekday_Timetable_August_2026_Updated.pdf';
 const PDF_WE = 'https://sptc.sc/wp-content/uploads/2026/08/SPTC_Weekend_Timetable_July_2026.pdf';
-const repoLink = (fr) => REPO ? ` · <a href="${REPO}" rel="noopener">${fr ? 'Code source' : 'Source code'}</a> · <a href="${REPO}/issues/new" rel="noopener">${fr ? 'Signaler une erreur / contact' : 'Report an error / contact'}</a>` : '';
+const mcpLink = (fr) => ` · <a href="/claude">${fr ? 'Utiliser dans Claude (serveur MCP)' : 'Use in Claude (MCP server)'}</a>`;
+const repoLink = (fr) => mcpLink(fr) + (REPO ? ` · <a href="${REPO}" rel="noopener">${fr ? 'Code source' : 'Source code'}</a> · <a href="${REPO}/issues/new" rel="noopener">${fr ? 'Signaler une erreur / contact' : 'Report an error / contact'}</a>` : '');
 
 const T = {
 fr: {
@@ -210,6 +211,7 @@ fr: {
   label: 'Votre question', placeholder: 'Ex. : prochain bus de Victoria à Beau Vallon après 16h',
   go: 'Chercher', hint: 'Heure des Seychelles (UTC+4) par défaut',
   examplesTitle: 'Exemples',
+  terminus: 'terminus',
   near: '📍 Près de moi', locating: 'Recherche de votre position…', nearNone: 'Aucun arrêt dont la position est connue à moins de 2 km. La position de beaucoup d’arrêts n’est pas encore connue : tapez plutôt votre question.',
   geoDenied: 'Position refusée ou indisponible. Vous pouvez autoriser la localisation dans les réglages de votre navigateur.', geoOutside: 'Vous semblez hors de Mahé : suggestions de proximité indisponibles.',
   forget: 'Effacer ma mémoire sur cet appareil', memNote: 'Vos recherches fréquentes et votre position restent sur votre appareil : rien n’est envoyé ni enregistré sur le serveur.',
@@ -276,6 +278,7 @@ en: {
   label: 'Your question', placeholder: 'e.g. next bus from Victoria to Beau Vallon after 4pm',
   go: 'Search', hint: 'Seychelles time (UTC+4) by default',
   examplesTitle: 'Examples',
+  terminus: 'terminus',
   near: '📍 Near me', locating: 'Finding your position…', nearNone: 'No stop with a known position within 2 km. Many stop positions are not known yet: please type your question instead.',
   geoDenied: 'Location denied or unavailable. You can allow location in your browser settings.', geoOutside: 'You seem to be outside Mahé: nearby suggestions are unavailable.',
   forget: 'Clear my memory on this device', memNote: 'Your frequent searches and your position stay on your device: nothing is sent to or stored on the server.',
@@ -418,7 +421,7 @@ function render(d) {
     } else {
       nodes.push(el('h3', { textContent: d.last ? t.lastN(d.rows.length) : d.first ? t.firstN(d.rows.length) : t.next(d.rows.length) }), el('div', { className: 'meta', textContent: d.last || d.first ? meta.replace(/ · [^·]*\d\d:\d\d · /, ' · ') : meta }));
       nodes.push(el('div', { className: 'meta', textContent: t.tapHint }));
-      nodes.push(table(t.cNext, d.rows.map((r) => [r.ta, el('span', {}, el('span', { className: 'tag', textContent: r.route }), ' ', el('span', { className: 'hint', textContent: r.title.replace(/^Route\s+\S+\s*/i, '') })), r.sa, r.tb || '–', r.sb || '–', r.dur != null ? fmtDur(r.dur) : '–']), 'cards', d.rows));
+      nodes.push(table(t.cNext, d.rows.map((r) => [r.ta, el('span', {}, el('span', { className: 'tag', textContent: r.route }), ' ', el('span', { className: 'hint', textContent: r.title.replace(/^Route\s+\S+\s*/i, '') })), r.sa, r.tb || '–', r.sb ? (r.term ? `${r.sb} · ${t.terminus}` : r.sb) : '–', r.dur != null ? fmtDur(r.dur) : '–']), 'cards', d.rows));
     }
   } else if (d.intent === 'need_from') {
     nodes.push(el('p', { textContent: t.needFrom(d.arrivee) }));
