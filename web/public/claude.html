@@ -6,8 +6,10 @@
 <meta name="theme-color" content="#075985">
 <title>Utiliser les horaires de bus des Seychelles dans Claude (serveur MCP)</title>
 <meta name="description" content="Ajoutez le serveur MCP gratuit « Bus Seychelles » à Claude : posez vos questions sur les horaires des bus SPTC de Mahé directement dans Claude. Service non officiel.">
-<script>try{var l=localStorage.getItem("lang")||(navigator.language||"fr").slice(0,2);document.documentElement.lang=l==="en"?"en":"fr"}catch(e){}</script>
 <link rel="canonical" href="https://bus-seychelles.pages.dev/claude">
+<link rel="alternate" hreflang="fr" href="https://bus-seychelles.pages.dev/claude">
+<link rel="alternate" hreflang="en" href="https://bus-seychelles.pages.dev/en/claude">
+<link rel="alternate" hreflang="x-default" href="https://bus-seychelles.pages.dev/claude">
 <link rel="icon" href="logo.svg" type="image/svg+xml">
 <style>
   :root { --ink:#0f172a; --muted:#475569; --sea:#0891b2; --deep:#075985; --sand:#fffbeb; --line:#bae6fd; --card:#ffffff; --code:#f1f5f9; --warn:#fef3c7; --warnink:#78350f; }
@@ -37,7 +39,7 @@
 <body>
 <div class="bar"><span class="fr">⚠️ <b>Service non officiel</b> : non édité ni approuvé par la SPTC. Horaires théoriques, sans temps réel.</span><span class="en">⚠️ <b>Unofficial service</b>: not published or endorsed by SPTC. Scheduled times only, no real-time data.</span></div>
 <main>
-  <div class="top"><a href="/"><span class="fr">← Bus Seychelles</span><span class="en">← Bus Seychelles</span></a><button id="lang" type="button" aria-label="Language">EN</button></div>
+  <div class="top"><a id="home" href="/">← Bus Seychelles</a><button id="lang" type="button" aria-label="Language">EN</button></div>
   <div class="fr">
   <h1>Utiliser les bus des Seychelles dans Claude</h1>
   <p>Le site est aussi un <b>serveur MCP</b> gratuit : une fois ajouté à Claude, vous pouvez lui demander
@@ -122,11 +124,7 @@ function apply() {
   document.getElementById('lang').textContent = t.btn;
   document.querySelectorAll('.cp').forEach((b) => { b.textContent = t.copy; });
 }
-document.getElementById('lang').onclick = () => {
-  const l = cur() === 'fr' ? 'en' : 'fr'; document.documentElement.lang = l;
-  try { localStorage.setItem('lang', l); } catch (e) {}
-  apply();
-};
+document.getElementById('lang').onclick = () => { location.assign(cur() === 'fr' ? '/en/claude' : '/claude'); };
 document.querySelectorAll('.cp').forEach((b) => {
   b.onclick = async () => {
     const code = b.parentElement.querySelector('.u2'), t = TXT[cur()];

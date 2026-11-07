@@ -62,4 +62,15 @@ sub(/src="logo\.svg"/, 'src="/logo.svg"');
 sub(/url\(hero\.svg\)/, 'url(/hero.svg)');
 fs.mkdirSync(new URL('en/', dir), { recursive: true });
 fs.writeFileSync(new URL('en/index.html', dir), en);
-console.log('ok : fr + en');
+
+// /claude (mode d'emploi du MCP) : la page contient déjà les deux langues (.fr / .en) ; on en tire une URL anglaise /en/claude.
+let c = fs.readFileSync(new URL('claude.html', dir), 'utf8');
+const sc = (re, to) => { if (!re.test(c)) throw new Error('claude.html, motif introuvable : ' + re); c = c.replace(re, to); };
+sc(/<html lang="fr">/, '<html lang="en">');
+sc(/<title>[^<]*<\/title>/, '<title>Use Seychelles bus timetables in Claude (MCP server)</title>');
+sc(/(<meta name="description" content=")[^"]*"/, '$1Add the free “Bus Seychelles” MCP server to Claude and ask about Mahé SPTC bus timetables right inside Claude. Unofficial service."');
+sc(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="${U}en/claude">`);
+sc(/href="logo\.svg"/, 'href="/logo.svg"');
+sc(/<a id="home" href="\/">/, '<a id="home" href="/en/">');
+fs.writeFileSync(new URL('en/claude.html', dir), c);
+console.log('ok : fr + en (+ /en/claude)');

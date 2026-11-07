@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#075985">
+<title>Use Seychelles bus timetables in Claude (MCP server)</title>
+<meta name="description" content="Add the free “Bus Seychelles” MCP server to Claude and ask about Mahé SPTC bus timetables right inside Claude. Unofficial service.">
+<link rel="canonical" href="https://bus-seychelles.pages.dev/en/claude">
+<link rel="alternate" hreflang="fr" href="https://bus-seychelles.pages.dev/claude">
+<link rel="alternate" hreflang="en" href="https://bus-seychelles.pages.dev/en/claude">
+<link rel="alternate" hreflang="x-default" href="https://bus-seychelles.pages.dev/claude">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<style>
+  :root { --ink:#0f172a; --muted:#475569; --sea:#0891b2; --deep:#075985; --sand:#fffbeb; --line:#bae6fd; --card:#ffffff; --code:#f1f5f9; --warn:#fef3c7; --warnink:#78350f; }
+  @media (prefers-color-scheme: dark) { :root { --ink:#e2e8f0; --muted:#94a3b8; --sand:#0b1220; --card:#111b2e; --line:#1e3a5f; --code:#0b1220; --warn:#3b2f0b; --warnink:#fde68a; --deep:#7dd3fc; } }
+  * { box-sizing:border-box; }
+  body { margin:0; font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; color:var(--ink); background:var(--sand); }
+  .bar { background:var(--warn); color:var(--warnink); text-align:center; padding:.5rem 1rem; font-size:.9rem; }
+  main { max-width:760px; margin:0 auto; padding:1.2rem 1rem 3rem; }
+  h1 { color:var(--deep); font-size:1.7rem; margin:.4rem 0 .6rem; line-height:1.2; }
+  h2 { color:var(--deep); font-size:1.2rem; margin:1.6rem 0 .5rem; }
+  a { color:var(--sea); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:1rem 1.1rem; margin:.8rem 0; }
+  .url { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; }
+  code, pre { background:var(--code); border-radius:8px; font:.9rem ui-monospace,Menlo,Consolas,monospace; }
+  code { padding:.1rem .35rem; word-break:break-all; }
+  pre { padding:.7rem .9rem; overflow-x:auto; margin:.5rem 0; }
+  button { background:var(--deep); color:#fff; border:0; border-radius:10px; padding:.5rem 1rem; font:inherit; font-weight:600; cursor:pointer; }
+  @media (prefers-color-scheme: dark) { button { color:#06202f; } }
+  ol { padding-left:1.3rem; } li { margin:.3rem 0; }
+  .muted { color:var(--muted); font-size:.92rem; }
+  html[lang=en] .fr, html:not([lang=en]) .en { display:none; }
+  .top { display:flex; justify-content:space-between; align-items:center; gap:1rem; }
+  #lang { background:transparent; color:var(--deep); border:2px solid var(--line); padding:.25rem .8rem; }
+  footer { max-width:760px; margin:0 auto; padding:0 1rem 2rem; color:var(--muted); font-size:.85rem; }
+</style>
+</head>
+<body>
+<div class="bar"><span class="fr">⚠️ <b>Service non officiel</b> : non édité ni approuvé par la SPTC. Horaires théoriques, sans temps réel.</span><span class="en">⚠️ <b>Unofficial service</b>: not published or endorsed by SPTC. Scheduled times only, no real-time data.</span></div>
+<main>
+  <div class="top"><a id="home" href="/en/">← Bus Seychelles</a><button id="lang" type="button" aria-label="Language">EN</button></div>
+  <div class="fr">
+  <h1>Utiliser les bus des Seychelles dans Claude</h1>
+  <p>Le site est aussi un <b>serveur MCP</b> gratuit : une fois ajouté à Claude, vous pouvez lui demander
+  « Quel est le prochain bus de Victoria à Beau Vallon ? » ou « Horaires de la ligne 20 le week-end » et Claude interroge directement la base d’horaires SPTC. Aucun compte ni clé API n’est nécessaire.</p>
+
+  <div class="card">
+    <b>Adresse du serveur MCP</b>
+    <div class="url"><code class="u2">https://bus-seychelles.pages.dev/mcp</code><button class="cp" type="button">Copier</button></div>
+    <p class="muted" style="margin:.5rem 0 0">Outils : <code>chercher_arret</code>, <code>prochains_passages</code>, <code>horaires_ligne</code> (lecture seule).</p>
+  </div>
+
+  <h2>Dans Claude (claude.ai, application bureau et mobile)</h2>
+  <ol>
+    <li>Ouvrez <b>Personnaliser → Connecteurs</b> (Customize → Connectors).</li>
+    <li>Cliquez sur <b>Ajouter un connecteur personnalisé</b> (Add custom connector).</li>
+    <li>Nom : <code>Bus Seychelles</code> ; URL : l’adresse ci-dessus. Laissez vide l’authentification. Validez.</li>
+    <li>Dans une conversation, activez le connecteur (menu « + » → Connecteurs) puis posez votre question.</li>
+  </ol>
+  <p class="muted">Offre gratuite : un seul connecteur personnalisé possible. Offres Team/Enterprise : un propriétaire de l’organisation doit d’abord l’ajouter. Détails officiels :
+  <a href="https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-MCP" rel="noopener">aide Claude</a>.</p>
+
+  <h2>Dans Claude Code (terminal)</h2>
+  <pre>claude mcp add --transport http bus-seychelles https://bus-seychelles.pages.dev/mcp</pre>
+
+  <h2>Autres clients MCP (Cursor, VS Code, etc.)</h2>
+  <p>Ajoutez un serveur MCP distant de type « HTTP / Streamable HTTP » avec cette URL, sans en-tête d’authentification.</p>
+  <pre>{ "mcpServers": { "bus-seychelles": { "url": "https://bus-seychelles.pages.dev/mcp" } } }</pre>
+
+  <h2>À savoir</h2>
+  <ul>
+    <li><b>Non officiel</b> : horaires extraits des PDF publiés par la SPTC (<a href="https://sptc.sc/timetable/" rel="noopener">sptc.sc/timetable</a>), valables au 4 août 2026, théoriques, sans temps réel ni correspondances. Vérifiez aux arrêts en cas de doute.</li>
+    <li><b>Confidentialité</b> : le serveur MCP est en lecture seule et n’enregistre ni vos questions ni votre adresse IP.</li>
+    <li><b>Limite d’usage</b> : 60 requêtes par minute et par adresse.</li>
+    <li>Code source et signalement d’erreurs : <a href="https://github.com/francoistll/sptc-bus-mcp" rel="noopener">GitHub</a>.</li>
+  </ul>
+</div>
+  <div class="en">
+  <h1>Use Seychelles buses in Claude</h1>
+  <p>The site is also a free <b>MCP server</b>: once added to Claude, you can ask
+  “What is the next bus from Victoria to Beau Vallon?” or “Route 20 timetable on weekends” and Claude queries the SPTC timetable database directly. No account or API key needed.</p>
+
+  <div class="card">
+    <b>MCP server address</b>
+    <div class="url"><code class="u2">https://bus-seychelles.pages.dev/mcp</code><button class="cp" type="button">Copy</button></div>
+    <p class="muted" style="margin:.5rem 0 0">Tools: <code>chercher_arret</code> (find a stop), <code>prochains_passages</code> (next buses), <code>horaires_ligne</code> (route timetable), all read-only.</p>
+  </div>
+
+  <h2>In Claude (claude.ai, desktop and mobile apps)</h2>
+  <ol>
+    <li>Open <b>Customize → Connectors</b>.</li>
+    <li>Click <b>Add custom connector</b>.</li>
+    <li>Name: <code>Bus Seychelles</code>; URL: the address above. Leave authentication empty. Confirm.</li>
+    <li>In a conversation, turn the connector on (“+” menu → Connectors), then ask your question.</li>
+  </ol>
+  <p class="muted">Free plan: only one custom connector is allowed. Team/Enterprise plans: an organization owner must add it first. Official details:
+  <a href="https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-MCP" rel="noopener">Claude help</a>.</p>
+
+  <h2>In Claude Code (terminal)</h2>
+  <pre>claude mcp add --transport http bus-seychelles https://bus-seychelles.pages.dev/mcp</pre>
+
+  <h2>Other MCP clients (Cursor, VS Code, etc.)</h2>
+  <p>Add a remote MCP server of type “HTTP / Streamable HTTP” with this URL and no authentication header.</p>
+  <pre>{ "mcpServers": { "bus-seychelles": { "url": "https://bus-seychelles.pages.dev/mcp" } } }</pre>
+
+  <h2>Good to know</h2>
+  <ul>
+    <li><b>Unofficial</b>: timetables extracted from the PDFs published by SPTC (<a href="https://sptc.sc/timetable/" rel="noopener">sptc.sc/timetable</a>), valid as of 4 August 2026, scheduled times only, no real-time data and no transfers. Check at the stop if in doubt.</li>
+    <li><b>Privacy</b>: the MCP server is read-only and stores neither your questions nor your IP address.</li>
+    <li><b>Usage limit</b>: 60 requests per minute per address.</li>
+    <li>Source code and error reports: <a href="https://github.com/francoistll/sptc-bus-mcp" rel="noopener">GitHub</a>.</li>
+  </ul>
+</div>
+</main>
+<footer><span class="fr">Bus Seychelles · intégration non officielle · données © SPTC (horaires)</span><span class="en">Bus Seychelles · unofficial integration · data © SPTC (timetables)</span></footer>
+<script>
+const TXT = { fr: { copy: 'Copier', ok: 'Copié ✓', sel: 'Sélectionné : Ctrl/Cmd+C', btn: 'EN', title: 'Utiliser les horaires de bus des Seychelles dans Claude (serveur MCP)', desc: 'Ajoutez le serveur MCP gratuit « Bus Seychelles » à Claude : posez vos questions sur les horaires des bus SPTC de Mahé directement dans Claude. Service non officiel.' },
+  en: { copy: 'Copy', ok: 'Copied ✓', sel: 'Selected: Ctrl/Cmd+C', btn: 'FR', title: 'Use Seychelles bus timetables in Claude (MCP server)', desc: 'Add the free “Bus Seychelles” MCP server to Claude and ask about Mahé SPTC bus timetables right inside Claude. Unofficial service.' } };
+const cur = () => (document.documentElement.lang === 'en' ? 'en' : 'fr');
+function apply() {
+  const t = TXT[cur()];
+  document.title = t.title; document.querySelector('meta[name=description]').content = t.desc;
+  document.getElementById('lang').textContent = t.btn;
+  document.querySelectorAll('.cp').forEach((b) => { b.textContent = t.copy; });
+}
+document.getElementById('lang').onclick = () => { location.assign(cur() === 'fr' ? '/en/claude' : '/claude'); };
+document.querySelectorAll('.cp').forEach((b) => {
+  b.onclick = async () => {
+    const code = b.parentElement.querySelector('.u2'), t = TXT[cur()];
+    try { await navigator.clipboard.writeText(code.textContent); b.textContent = t.ok; }
+    catch (e) { const r = document.createRange(); r.selectNodeContents(code); getSelection().removeAllRanges(); getSelection().addRange(r); b.textContent = t.sel; }
+    setTimeout(() => { b.textContent = TXT[cur()].copy; }, 2500);
+  };
+});
+apply();
+</script>
+</body>
+</html>
