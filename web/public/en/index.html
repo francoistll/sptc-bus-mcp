@@ -496,7 +496,7 @@ function render(d) {
 }
 
 $('#go').onclick = ask;
-$('#q').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) ask(); });
+$('#q').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); ask(); } });
 // ---- Mémoire locale : tout reste dans le navigateur (localStorage), rien n'est envoyé au serveur ----
 const MEM_KEY = 'busMemory.v1';
 const loadMem = () => { try { const m = JSON.parse(localStorage.getItem(MEM_KEY)); return { trips: m?.trips || [], spots: m?.spots || [] }; } catch { return { trips: [], spots: [] }; } };
