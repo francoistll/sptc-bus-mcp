@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 560" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Plage des Seychelles : rochers de granit, palmiers et lagon turquoise (illustration)">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#38bdf8"/><stop offset=".6" stop-color="#bae6fd"/><stop offset="1" stop-color="#fef3c7"/></linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#0891b2"/></linearGradient>
+    <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fde68a"/><stop offset="1" stop-color="#fcd34d"/></linearGradient>
+    <radialGradient id="sun"><stop offset="0" stop-color="#fff7d6"/><stop offset=".5" stop-color="#fde047"/><stop offset="1" stop-color="#fde04700"/></radialGradient>
+    <linearGradient id="rock" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d6d3d1"/><stop offset=".55" stop-color="#a8a29e"/><stop offset="1" stop-color="#78716c"/></linearGradient>
+    <g id="palm">
+      <path d="M0 0 Q14 -120 6 -240" stroke="#6b4423" stroke-width="12" fill="none" stroke-linecap="round"/>
+      <g stroke="#15803d" stroke-width="9" fill="none" stroke-linecap="round">
+        <path d="M6 -240 Q-70 -250 -120 -200"/><path d="M6 -240 Q-50 -290 -110 -270"/>
+        <path d="M6 -240 Q40 -300 100 -285"/><path d="M6 -240 Q80 -250 130 -205"/><path d="M6 -240 Q10 -300 -10 -320"/>
+      </g>
+    </g>
+  </defs>
+  <rect width="1600" height="560" fill="url(#sky)"/>
+  <circle cx="1230" cy="190" r="170" fill="url(#sun)"/>
+  <circle cx="1230" cy="190" r="48" fill="#fffbeb"/>
+  <g fill="#ffffff" opacity=".85">
+    <ellipse cx="260" cy="120" rx="120" ry="22"/><ellipse cx="340" cy="105" rx="80" ry="20"/>
+    <ellipse cx="760" cy="80" rx="140" ry="20"/><ellipse cx="860" cy="66" rx="70" ry="16"/>
+  </g>
+  <!-- île au loin -->
+  <path d="M900 300 Q980 230 1070 250 Q1130 215 1210 260 Q1280 270 1330 300Z" fill="#0f766e" opacity=".45"/>
+  <!-- mer -->
+  <rect y="290" width="1600" height="190" fill="url(#sea)"/>
+  <g stroke="#ecfeff" stroke-width="3" fill="none" opacity=".65" stroke-linecap="round">
+    <path d="M60 340 q40 -10 80 0 t80 0"/><path d="M420 380 q50 -12 100 0 t100 0"/>
+    <path d="M900 330 q40 -10 80 0 t80 0"/><path d="M1200 395 q50 -12 100 0 t100 0"/>
+    <path d="M640 350 q35 -8 70 0 t70 0"/>
+  </g>
+  <!-- plage -->
+  <path d="M0 430 Q400 400 800 440 T1600 420 V560 H0Z" fill="url(#sand)"/>
+  <path d="M0 430 Q400 400 800 440 T1600 420" stroke="#ecfeff" stroke-width="10" fill="none" opacity=".85"/>
+  <!-- rochers de granit -->
+  <g>
+    <path d="M60 470 Q40 360 140 320 Q260 290 330 350 Q380 420 360 480Z" fill="url(#rock)"/>
+    <path d="M250 480 Q250 400 330 380 Q420 370 450 430 Q470 470 440 490Z" fill="#a8a29e"/>
+    <path d="M110 380 Q150 350 210 360" stroke="#78716c" stroke-width="5" fill="none" opacity=".6"/>
+    <path d="M1220 480 Q1210 400 1290 380 Q1380 360 1430 420 Q1470 470 1450 490Z" fill="url(#rock)"/>
+  </g>
+  <!-- palmiers -->
+  <use href="#palm" transform="translate(1060 500) scale(.95)"/>
+  <use href="#palm" transform="translate(1500 520) scale(1.1) rotate(-4)"/>
+  <use href="#palm" transform="translate(560 510) scale(.7) rotate(5)"/>
+  <rect y="520" width="1600" height="40" fill="#fcd34d"/>
+</svg>

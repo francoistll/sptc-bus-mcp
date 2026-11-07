@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Bus Seychelles">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0ea5c6"/><stop offset="1" stop-color="#075985"/></linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="url(#bg)"/>
+  <circle cx="86" cy="32" r="12" fill="#fbbf24"/>
+  <path d="M0 78 Q15 70 30 78 T60 78 T90 78 T120 78 V120 H0Z" fill="#0c4a6e" opacity=".55"/>
+  <!-- palmier -->
+  <path d="M24 90 Q27 62 30 44" stroke="#7c4a1d" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M30 44 Q16 38 8 46 M30 44 Q22 32 10 32 M30 44 Q38 32 50 34 M30 44 Q44 40 52 50" stroke="#16a34a" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- bus -->
+  <rect x="26" y="62" width="70" height="30" rx="8" fill="#f8fafc"/>
+  <rect x="26" y="78" width="70" height="6" fill="#ea580c"/>
+  <rect x="32" y="67" width="12" height="9" rx="2" fill="#38bdf8"/>
+  <rect x="48" y="67" width="12" height="9" rx="2" fill="#38bdf8"/>
+  <rect x="64" y="67" width="12" height="9" rx="2" fill="#38bdf8"/>
+  <rect x="80" y="67" width="11" height="14" rx="2" fill="#38bdf8"/>
+  <circle cx="44" cy="93" r="7" fill="#1e293b"/><circle cx="44" cy="93" r="3" fill="#cbd5e1"/>
+  <circle cx="78" cy="93" r="7" fill="#1e293b"/><circle cx="78" cy="93" r="3" fill="#cbd5e1"/>
+</svg>

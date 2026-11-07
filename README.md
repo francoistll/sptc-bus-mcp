@@ -87,7 +87,15 @@ ceux d'OSM désignent des arrêts physiques (commerce, lieu-dit) : l'appariement
 * Colonnes irrégulières dans quelques tableaux : certaines lignes secondaires peuvent être décalées.
 * Les PDF changent (nouveaux horaires en juillet 2025, mai 2026, août 2026…) : relancer `run_all.sh`.
 
-## Hébergement
+## Site web public (sans MCP) — `web/`
+
+Une page « Bus Seychelles » avec un textarea en langage naturel, des exemples cliquables, la documentation et la
+source des données (liens vers les PDF officiels, mention « intégration non officielle »), bilingue FR/EN et
+optimisée mobile. Une IA gratuite (Cloudflare Workers AI) ne sert qu'à **comprendre la question** ; les horaires
+viennent toujours de la base D1 : l'IA n'en invente jamais. Sans quota IA, une analyse par règles prend le relais.
+Déploiement gratuit pas à pas : [`web/DEPLOY.md`](web/DEPLOY.md).
+
+## Hébergement du MCP
 
 Le serveur est sans état, le conteneur est minuscule (base : ~350 Ko). Avec le `Dockerfile` fourni :
 
