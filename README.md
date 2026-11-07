@@ -20,19 +20,8 @@ timetables into SQLite. No official GTFS feed exists. Scheduled times only, no r
 
 ## Utilisation
 
-**Comme connecteur Claude (serveur distant)** — Paramètres → Connecteurs → *Ajouter un connecteur personnalisé* →
-URL de votre instance, terminée par `/mcp` (voir *Hébergement*).
-
-**En local (Claude Code, Claude Desktop)** :
-
-```bash
-pip install -r requirements.txt
-claude mcp add sptc-bus -- python /chemin/vers/sptc-bus-mcp/server/server.py
-```
-
-**Mode HTTP** : `SPTC_HTTP=1 python server/server.py` → `http://127.0.0.1:8791/mcp`.
-Variables : `SPTC_BIND` (défaut `127.0.0.1`), `PORT`/`SPTC_PORT` (défaut `8791`), `SPTC_DB` (chemin de la base),
-`SPTC_PUBLIC_HOST` (noms d'hôte autorisés, séparés par des virgules ; active la protection DNS-rebinding).
+**Serveur MCP public, gratuit, sans compte** : `https://bus-seychelles.pages.dev/mcp`. Mode d'emploi (Claude, Claude Code, Cursor…) :
+https://bus-seychelles.pages.dev/claude — dans Claude : Personnaliser → Connecteurs → *Ajouter un connecteur personnalisé* → coller l'URL.
 
 ## Comment les données ont été créées
 
@@ -76,8 +65,8 @@ ceux d'OSM désignent des arrêts physiques (commerce, lieu-dit) : l'appariement
 
 ### 3. Serveur
 
-`server/server.py` ouvre la base en **lecture seule** et expose les trois outils ci-dessus
-(SDK Python [`mcp`](https://pypi.org/project/mcp/) 1.x, `FastMCP`).
+Le site et le serveur MCP sont des fonctions Cloudflare Pages (`web/functions/`) qui lisent la même base D1, copie de `data/sptc.sqlite`
+(`web/schema.sql`). Voir `web/DEPLOY.md`.
 
 ### Limites connues
 
@@ -108,19 +97,6 @@ Ce service est une intégration **non officielle**, non affiliée à la SPTC.
 `https://bus-seychelles.pages.dev/mcp` : serveur MCP distant (Streamable HTTP, sans état, lecture seule, sans authentification) qui interroge la même base D1 que le site
 (`web/functions/mcp.js`). Outils : `chercher_arret`, `prochains_passages`, `horaires_ligne`. Mode d'emploi pour Claude : https://bus-seychelles.pages.dev/claude
 (Claude Code : `claude mcp add --transport http bus-seychelles https://bus-seychelles.pages.dev/mcp`). Limite : 60 requêtes/minute/IP. Service **non officiel**.
-
-## Hébergement du MCP
-
-Le serveur est sans état, le conteneur est minuscule (base : ~350 Ko). Avec le `Dockerfile` fourni :
-
-```bash
-docker build -t sptc-bus-mcp .
-docker run -p 8080:8080 -e SPTC_PUBLIC_HOST=bus.example.org sptc-bus-mcp   # → http://localhost:8080/mcp
-```
-
-Tout hébergeur de conteneurs convient (Fly.io, Render, Google Cloud Run…) : le serveur lit la variable `PORT`.
-Les offres gratuites changent souvent ; vérifiez leurs conditions. Le point d'accès est public et sans
-authentification (données publiques, lecture seule).
 
 ## Crédits et licences
 
