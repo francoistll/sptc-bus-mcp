@@ -33,7 +33,7 @@ et un compte rendu court à François à la fin (ce qui a été vu, changé, dé
 3. Si de nouveaux PDF existent :
    - sauvegarde : `cd web && npx wrangler d1 export sptc-bus --remote --output ~/sptc-bus-mcp/backup-d1-$(date +%F).sql` (hors git, à ne pas pousser) ;
    - mettre à jour les URL (fetch.sh, index.html), `pip install -r requirements.txt` si besoin (utiliser un venv hors dépôt), lancer `pipeline/run_all.sh`
-     (≈ 5 min ; geo2 appelle Nominatim à 1 requête/s) puis `python pipeline/make_schema.py` pour régénérer `web/schema.sql` ;
+     (≈ 5 min ; geo2 appelle Nominatim à 1 requête/s) puis `python pipeline/make_schema.py` pour régénérer `web/schema.sql` **et `web/public/timetable.json` (c est lui que le site lit : il faut le déployer) ** ;
    - **valider avant d'importer** : nombre de lignes (services, trajets, passages) du même ordre que l'ancienne base (écart > 25 % = anomalie, s'arrêter et prévenir François),
      et les 4 requêtes de non-régression ci-dessus donnent des résultats ;
    - mettre à jour `VALID_FR`/`VALID_EN` dans `functions/_lib/query.js` (date de validité) et la date du sitemap ;
