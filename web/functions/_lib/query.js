@@ -57,19 +57,24 @@ export async function lineTimetable(db, { route, day }) {
   const services = (
     await db.prepare('select id, title from services where day_type = ? and route = ? order by id').bind(day, route).all()
   ).results;
-  const out = [];
-  for (const s of services) {
-    const stops = (await db.prepare('select stop from service_stops where service_id = ? order by seq').bind(s.id).all()).results.map((x) => x.stop);
-    const trips = (await db.prepare('select id from trips where service_id = ? order by trip_no').bind(s.id).all()).results;
-    const rows = [];
-    for (const t of trips) {
-      const tm = {};
-      for (const r of (await db.prepare('select seq, time from stop_times where trip_id = ?').bind(t.id).all()).results) tm[r.seq] = r.time;
-      rows.push(stops.map((_, i) => tm[i] || '–'));
+  if (!services.length) return [];
+  // Une seule requête groupée (db.batch) au lieu d'une requête par trajet.
+  const res = await db.batch(
+    services.flatMap((s) => [
+      db.prepare('select stop from service_stops where service_id = ? order by seq').bind(s.id),
+      db.prepare('select t.id trip, st.seq, st.time from trips t left join stop_times st on st.trip_id = t.id where t.service_id = ? order by t.trip_no, t.id').bind(s.id),
+    ])
+  );
+  return services.map((s, k) => {
+    const stops = res[2 * k].results.map((x) => x.stop);
+    const byTrip = new Map();
+    for (const r of res[2 * k + 1].results) {
+      if (!byTrip.has(r.trip)) byTrip.set(r.trip, {});
+      if (r.seq !== null) byTrip.get(r.trip)[r.seq] = r.time;
     }
-    out.push({ title: s.title, stops, rows });
-  }
-  return out;
+    const rows = [...byTrip.values()].map((tm) => stops.map((_, i) => tm[i] || '–'));
+    return { title: s.title, stops, rows };
+  });
 }
 
 // Détail d'un trajet : tous les arrêts du service, avec l'heure de passage de ce trajet (null si non indiquée).

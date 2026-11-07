@@ -15,7 +15,7 @@ function limited(ip) {
   return arr.length > 12;
 }
 
-async function handle({ request, env }) {
+async function handle({ request, env }, emit = () => {}) {
   const ip = request.headers.get('cf-connecting-ip') || 'x';
   if (limited(ip)) return json({ ok: false, error: 'rate_limit' }, 429);
   let body;
@@ -25,14 +25,22 @@ async function handle({ request, env }) {
 
   const db = env.DB;
   const now = seychellesNow();
+  const ms = {};
+  let t0 = Date.now();
+  const lap = (k) => { const t = Date.now(); ms[k] = t - t0; t0 = t; };
+  emit('stops');
   const stops = await stopNames(db);
+  lap('stops');
+  emit('parse');
   const { parsed, via } = await parseQuestion(env, question, stops);
+  lap('parse');
+  emit('search');
   const tomorrowDay = seychellesNow(new Date(Date.now() + 86400000)).day;
   const day = parsed.day || (parsed.tomorrow ? tomorrowDay : now.day);
   const last = !!parsed.last && !parsed.time;
   const first = !last && !!parsed.first && !parsed.time;
   const after = last || first ? '00:00' : parsed.time || (parsed.tomorrow ? '00:00' : now.time);
-  const base = { ok: true, via, parsed, day, after, last, first, tomorrow: !!parsed.tomorrow, now: now.time, notice: { fr: VALID_FR, en: VALID_EN } };
+  const base = { ok: true, via, ms, parsed, day, after, last, first, tomorrow: !!parsed.tomorrow, now: now.time, notice: { fr: VALID_FR, en: VALID_EN } };
 
   if (parsed.intent === 'next' && !parsed.depart && parsed.arrivee) {
     const routes = (await db.prepare(`select distinct s.route from services s join trips t on t.service_id = s.id join stop_times a on a.trip_id = t.id and a.stop like ? escape '\\' order by s.route`).bind('%' + String(parsed.arrivee).replace(/[\\%_]/g, (c) => '\\' + c) + '%').all()).results.map((x) => x.route);
@@ -73,7 +81,28 @@ const redact = (q) => q.replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, '[email]').replace(/
 export async function onRequestPost(ctx) {
   let question = '';
   try { question = String((await ctx.request.clone().json())?.q || ''); } catch {}
-  const res = await handle(ctx);
+  // Mode flux (en-tête x-stream: 1) : une ligne JSON par étape en cours, puis {"done": réponse}.
+  if (ctx.request.headers.get('x-stream') === '1') {
+    const { readable, writable } = new TransformStream();
+    const w = writable.getWriter();
+    const enc = new TextEncoder();
+    const send = (o) => w.write(enc.encode(JSON.stringify(o) + '\n')).catch(() => {});
+    ctx.waitUntil((async () => {
+      try {
+        const res = await handleLogged(ctx, question, (step) => send({ step }));
+        await send({ status: res.status, done: await res.json() });
+      } catch { await send({ status: 500, done: { ok: false, error: 'server' } }); }
+      await w.close().catch(() => {});
+    })());
+    return new Response(readable, { headers: { 'content-type': 'application/x-ndjson; charset=utf-8', 'cache-control': 'no-store' } });
+  }
+  return handleLogged(ctx, question);
+}
+
+async function handleLogged(ctx, question, emit) {
+  const t0 = Date.now();
+  const res = await handle(ctx, emit);
+  res.headers.set('server-timing', `total;dur=${Date.now() - t0}`);
   if (res.status === 200 && ctx.env.DB) {
     try {
       const j = await res.clone().json();

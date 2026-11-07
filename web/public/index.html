@@ -58,6 +58,9 @@
   .btn2:disabled { opacity:.6; cursor:wait; }
   .forget { background:none; border:0; color:#475569; font:inherit; font-size:.82rem; text-decoration:underline; cursor:pointer; padding:.2rem 0; margin-top:.4rem; }
   .hint { color:#475569; font-size:.88rem; }
+  .steps { list-style:none; margin:.4rem 0; padding:0; line-height:1.9; color:#64748b; }
+  .steps .done { color:#15803d; }
+  .steps .cur { color:#0f172a; font-weight:600; }
   #out { margin-top:1.1rem; }
   .meta { color:#475569; font-size:.85rem; margin:.3rem 0 .6rem; }
   table { border-collapse:collapse; width:100%; font-size:.95rem; }
@@ -220,7 +223,7 @@ fr: {
   forget: 'Effacer ma mémoire sur cet appareil', memNote: 'Vos recherches fréquentes et votre position restent sur votre appareil : rien n’est envoyé ni enregistré sur le serveur.',
   qFrom: (a) => `prochain bus depuis ${a}`, qFromTo: (a, b) => `prochain bus de ${a} à ${b}`, home: 'domicile probable', metersAway: (m) => (m < 950 ? `${Math.round(m / 10) * 10} m` : `${(m / 1000).toFixed(1)} km`),
   ex: ['Prochain bus de Victoria à Beau Vallon', 'Bus de Beau Vallon à Victoria vers 17h30', 'Horaires de la ligne 20', 'Ligne 22 le week-end', 'Premier bus de Victoria à Anse Royale', 'Arrêts « Anse Etoile »'],
-  loading: 'Recherche…',
+  loading: 'Recherche…', steps: { stops: 'Lecture de la liste des arrêts', parse: 'Compréhension de votre question', search: 'Recherche des horaires' }, stepsWait: 'Merci de patienter, cela prend quelques secondes.',
   next: (n) => `${n} prochain(s) passage(s)`,
   cNext: ['Départ', 'Ligne', 'Arrêt de départ', 'Arrivée', 'Arrêt d’arrivée', 'Durée'],
   lastN: (n) => `${n} derniers passages de la journée`,
@@ -241,7 +244,7 @@ fr: {
   suggest: 'Arrêts proches de votre saisie :',
   unknown: 'Je n’ai pas compris. Essayez : « prochain bus de Victoria à Beau Vallon » ou « horaires de la ligne 20 ».',
   rate: 'Trop de requêtes, réessayez dans une minute.', error: 'Service indisponible, réessayez plus tard.',
-  day: { weekday: 'semaine', weekend: 'week-end' }, after: 'à partir de', via: { llm: 'compris par IA', rules: 'compris par règles simples' },
+  day: { weekday: 'semaine', weekend: 'week-end' }, after: 'à partir de', via: { llm: 'compris par IA', rules: 'compris par règles simples', fast: 'compris directement' },
   stopsTitle: 'Arrêts trouvés', approxPos: 'position approximative',
   docsTitle: 'À propos de ce service',
   docsBody: `
@@ -287,7 +290,7 @@ en: {
   forget: 'Clear my memory on this device', memNote: 'Your frequent searches and your position stay on your device: nothing is sent to or stored on the server.',
   qFrom: (a) => `next bus from ${a}`, qFromTo: (a, b) => `next bus from ${a} to ${b}`, home: 'likely home', metersAway: (m) => (m < 950 ? `${Math.round(m / 10) * 10} m` : `${(m / 1000).toFixed(1)} km`),
   ex: ['Next bus from Victoria to Beau Vallon', 'Bus from Beau Vallon to Victoria around 17:30', 'Timetable for route 20', 'Route 22 on weekends', 'First bus from Victoria to Anse Royale', 'Stops “Anse Etoile”'],
-  loading: 'Searching…',
+  loading: 'Searching…', steps: { stops: 'Reading the list of stops', parse: 'Understanding your question', search: 'Looking up the timetables' }, stepsWait: 'Please wait, this takes a few seconds.',
   next: (n) => `${n} upcoming departure(s)`,
   cNext: ['Departs', 'Route', 'From stop', 'Arrives', 'To stop', 'Duration'],
   lastN: (n) => `Last ${n} departures of the day`,
@@ -308,7 +311,7 @@ en: {
   suggest: 'Stops similar to your input:',
   unknown: 'I did not understand. Try: “next bus from Victoria to Beau Vallon” or “timetable for route 20”.',
   rate: 'Too many requests, please try again in a minute.', error: 'Service unavailable, please try again later.',
-  day: { weekday: 'weekday', weekend: 'weekend' }, after: 'from', via: { llm: 'understood by AI', rules: 'understood by simple rules' },
+  day: { weekday: 'weekday', weekend: 'weekend' }, after: 'from', via: { llm: 'understood by AI', rules: 'understood by simple rules', fast: 'understood directly' },
   stopsTitle: 'Stops found', approxPos: 'approximate position',
   docsTitle: 'About this service',
   docsBody: `
@@ -360,15 +363,38 @@ function applyLang() {
   if (typeof renderSuggestions === 'function') renderSuggestions();
 }
 
+const STEP_ORDER = ['stops', 'parse', 'search'];
+function showSteps(out, t, cur) {
+  const i = STEP_ORDER.indexOf(cur);
+  const items = STEP_ORDER.map((k, n) => el('li', { className: n < i ? 'done' : n === i ? 'cur' : '', textContent: (n < i ? '✓ ' : n === i ? '⏳ ' : '○ ') + t.steps[k] + (n === i ? '…' : '') }));
+  out.replaceChildren(el('ul', { className: 'steps', role: 'status' }, items), el('p', { className: 'hint', textContent: t.stepsWait }));
+}
+
 async function ask() {
   const q = $('#q').value.trim();
   if (q.length < 3) return;
   const t = T[lang], out = $('#out'), btn = $('#go');
-  btn.disabled = true; out.replaceChildren(el('p', { className: 'hint', textContent: t.loading }));
+  btn.disabled = true; showSteps(out, t, 'stops');
   try {
-    const r = await fetch('/api/ask', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ q }) });
+    const r = await fetch('/api/ask', { method: 'POST', headers: { 'content-type': 'application/json', 'x-stream': '1' }, body: JSON.stringify({ q }) });
     if (r.status === 429) { out.replaceChildren(el('p', { className: 'err', textContent: t.rate })); return; }
-    const d = await r.json();
+    // Flux : une ligne JSON par étape en cours, puis {done: réponse}.
+    let final = null, buf = '';
+    const feed = (line) => { if (!line.trim()) return; const m = JSON.parse(line); if (m.step) showSteps(out, t, m.step); else if (m.done) final = m; };
+    if (r.body && r.body.getReader) {
+      const rd = r.body.getReader(), dec = new TextDecoder();
+      for (;;) {
+        const { value, done } = await rd.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let k;
+        while ((k = buf.indexOf('\n')) >= 0) { feed(buf.slice(0, k)); buf = buf.slice(k + 1); }
+      }
+      feed(buf);
+    } else (await r.text()).split('\n').forEach(feed);
+    if (!final) { out.replaceChildren(el('p', { className: 'err', textContent: t.error })); return; }
+    if (final.status === 429) { out.replaceChildren(el('p', { className: 'err', textContent: t.rate })); return; }
+    const d = final.done;
     if (!d.ok) { out.replaceChildren(el('p', { className: 'err', textContent: t.error })); return; }
     render(d);
     if (d.intent === 'next' && d.rows?.length && d.rows[0].sa) { remember('trips', { a: d.rows[0].sa, b: d.rows[0].sb || null }); renderSuggestions(); }

@@ -152,6 +152,10 @@ export async function parseQuestion(env, question, stops) {
     if (!p.time && !p.last) p.time = rules.time;
     return { parsed: p, via, why };
   };
+  // Chemin rapide (évite ~3 s d'appel au LLM) : numéro de ligne explicite, ou deux arrêts connus cités dans le texte.
+  const explicitLine = rules.intent === 'line' && /(?:ligne|line|route)\s*n?°?\s*\d/i.test(question);
+  const twoStops = rules.intent === 'next' && rules.depart && rules.arrivee && stopsInText(question, stops).length >= 2;
+  if (explicitLine || twoStops) return finish(rules, 'fast');
   if (!env.AI) return finish(rules, 'rules', 'no_ai_binding');
   try {
     const r = await env.AI.run(MODEL, {
