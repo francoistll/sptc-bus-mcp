@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#075985">
 <title>Horaires des bus Seychelles (Mahé, SPTC) — prochain bus, lignes et arrêts</title>
+<script>
+// Langue par défaut : français pour un navigateur francophone, anglais sinon (sauf choix explicite via le bouton FR/EN, ou robot d'indexation).
+(function(){try{
+  var d=document.documentElement; if(d.lang!=='fr') return;
+  if(localStorage.getItem('lang')) return;
+  if(/bot|crawl|spider|slurp|bing|google|facebookexternalhit|preview/i.test(navigator.userAgent)) return;
+  var l=(navigator.languages&&navigator.languages[0])||navigator.language||'fr';
+  if(!/^fr/i.test(l)) location.replace(location.pathname.indexOf('claude')>=0 ? '/en/claude' : '/en/');
+}catch(e){}})();
+</script>
+
 <meta name="description" content="Horaires des bus de Mahé (Seychelles) : demandez « prochain bus de Victoria à Beau Vallon » en langage naturel. Lignes, arrêts et horaires SPTC, août 2026. Service non officiel, gratuit.">
 <meta name="google-site-verification" content="Lguw7Gf9Ax0o85dpeaOsOwgIZE9REsqbFfyHeIMyUoY" />
 <meta name="robots" content="index, follow, max-snippet:-1">
@@ -564,7 +575,7 @@ function locate(silent) {
 $('#near').onclick = () => locate(false);
 // Si la localisation est déjà autorisée pour ce site, on propose directement les arrêts proches.
 try { navigator.permissions?.query({ name: 'geolocation' }).then((r) => { if (r.state === 'granted') locate(true); }).catch(() => {}); } catch {}
-$('#lang').onclick = () => { location.assign(lang === 'fr' ? '/en/' : '/'); };
+$('#lang').onclick = () => { try { localStorage.setItem('lang', lang === 'fr' ? 'en' : 'fr'); } catch {} location.assign(lang === 'fr' ? '/en/' : '/'); };
 applyLang();
 </script>
 </body>

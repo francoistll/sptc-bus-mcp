@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#075985">
 <title>Use Seychelles bus timetables in Claude (MCP server)</title>
+<script>
+// Langue par défaut : français pour un navigateur francophone, anglais sinon (sauf choix explicite via le bouton FR/EN, ou robot d'indexation).
+(function(){try{
+  var d=document.documentElement; if(d.lang!=='fr') return;
+  if(localStorage.getItem('lang')) return;
+  if(/bot|crawl|spider|slurp|bing|google|facebookexternalhit|preview/i.test(navigator.userAgent)) return;
+  var l=(navigator.languages&&navigator.languages[0])||navigator.language||'fr';
+  if(!/^fr/i.test(l)) location.replace(location.pathname.indexOf('claude')>=0 ? '/en/claude' : '/en/');
+}catch(e){}})();
+</script>
+
 <meta name="description" content="Add the free “Bus Seychelles” MCP server to Claude and ask about Mahé SPTC bus timetables right inside Claude. Unofficial service.">
 <link rel="canonical" href="https://bus-seychelles.pages.dev/en/claude">
 <link rel="alternate" hreflang="fr" href="https://bus-seychelles.pages.dev/claude">
@@ -124,7 +135,7 @@ function apply() {
   document.getElementById('lang').textContent = t.btn;
   document.querySelectorAll('.cp').forEach((b) => { b.textContent = t.copy; });
 }
-document.getElementById('lang').onclick = () => { location.assign(cur() === 'fr' ? '/en/claude' : '/claude'); };
+document.getElementById('lang').onclick = () => { try { localStorage.setItem('lang', cur() === 'fr' ? 'en' : 'fr'); } catch {} location.assign(cur() === 'fr' ? '/en/claude' : '/claude'); };
 document.querySelectorAll('.cp').forEach((b) => {
   b.onclick = async () => {
     const code = b.parentElement.querySelector('.u2'), t = TXT[cur()];
