@@ -1,105 +1,158 @@
-# Bus Seychelles — horaires des bus SPTC (Mahé, Seychelles)
+# Bus Seychelles — SPTC bus timetables (Mahé, Seychelles)
 
-Projet **non officiel** autour des horaires de la **Seychelles Public Transport Corporation (SPTC)**, qui ne publie que
-des PDF (ni GTFS, ni API). Il les transforme en données exploitables et les propose de deux façons :
+An **unofficial** project built around the timetables of the **Seychelles Public Transport Corporation (SPTC)**, which
+only publishes PDFs (no GTFS feed, no API). The project turns those PDFs into usable data and offers them in two ways:
 
-| | Pour qui | Où |
+| | For whom | Where |
 |---|---|---|
-| 🌐 **Application web** | Tout le monde : question en langage naturel (« prochain bus de Victoria à Beau Vallon après 16h »), arrêts proches, trajets fréquents, correspondances, FR/EN, mobile | https://bus-seychelles.pages.dev |
-| 🤖 **Serveur MCP** | Assistants IA (Claude, Cursor…) | `https://bus-seychelles.pages.dev/mcp` — voir [MCP.md](MCP.md) |
+| 🌐 **Web app** | Everyone: natural-language questions ("next bus from Victoria to Beau Vallon after 4pm"), nearby stops, frequent trips, transfers, FR/EN, mobile-first | https://bus-seychelles.pages.dev |
+| 🤖 **MCP server** | AI assistants (Claude, Cursor…) | `https://bus-seychelles.pages.dev/mcp` — see [MCP.md](MCP.md) |
 
-*English: an unofficial web app (natural-language questions, nearby stops, transfers, FR/EN) and a public MCP server for AI assistants, both built from the official SPTC PDF timetables. Scheduled times only, no real-time data.*
+> ⚠️ **Scheduled times only, no real-time data.** SPTC data valid as of **4 August 2026**, extracted automatically
+> from PDFs. Errors are possible: check [sptc.sc/timetable](https://sptc.sc/timetable/) or the stop itself.
+> Unofficial project, not affiliated with the SPTC.
 
-> ⚠️ **Horaires théoriques, sans temps réel.** Données SPTC valables au **4 août 2026**, extraites automatiquement
-> de PDF. Des erreurs sont possibles : vérifiez sur [sptc.sc/timetable](https://sptc.sc/timetable/) ou aux arrêts.
-> Projet non officiel, non affilié à la SPTC.
+## Web app — `web/`
 
-## Application web — `web/`
+**Live: https://bus-seychelles.pages.dev** (hosted for free on Cloudflare Pages).
 
-**En ligne : https://bus-seychelles.pages.dev** (hébergée gratuitement sur Cloudflare Pages).
+A single page with a natural-language input, clickable examples, documentation and the data sources (links to the
+official PDFs, "Unofficial service" banner). Bilingual (`/` in French, `/en/` in English), optimised for mobile.
 
-Une page avec un champ en langage naturel, des exemples cliquables, la documentation et la source des données (liens
-vers les PDF officiels, mention « Service non officiel »). Bilingue (`/` en français, `/en/` en anglais), optimisée mobile.
+* A free AI (Cloudflare Workers AI) is only used to **understand the question**; times always come from the official
+  data, the AI never invents them. When the AI quota is used up, a rule-based parser takes over.
+* Timetables are served as static JSON (`web/public/timetable.json`) and queried in memory; the D1 database is only
+  used for logs (kept 60 days; the site never stores IP addresses).
+* Personalisation lives in the browser only (`localStorage`): nearby stops (the user's position never leaves the
+  device), frequent trips, a "Clear my memory" button.
 
-* Une IA gratuite (Cloudflare Workers AI) ne sert qu'à **comprendre la question** ; les horaires viennent toujours des
-  données officielles : l'IA n'en invente jamais. Sans quota IA, une analyse par règles prend le relais.
-* Les horaires sont servis en JSON statique (`web/public/timetable.json`) et interrogés en mémoire ; la base D1 ne
-  sert qu'aux journaux (60 jours, sans IP pour le site).
-* Personnalisation uniquement dans le navigateur (`localStorage`) : arrêts proches (la position ne quitte jamais l'appareil),
-  trajets fréquents, bouton « Effacer ma mémoire ».
+Step-by-step deployment: [`web/DEPLOY.md`](web/DEPLOY.md) · maintenance: [`web/MAINTENANCE.md`](web/MAINTENANCE.md).
 
-Déploiement pas à pas : [`web/DEPLOY.md`](web/DEPLOY.md) · entretien : [`web/MAINTENANCE.md`](web/MAINTENANCE.md).
+## MCP server
 
-## Serveur MCP
+The same timetable engine is exposed to AI assistants through a free, account-less remote MCP server:
+`https://bus-seychelles.pages.dev/mcp`. Tools, setup and limits: **[MCP.md](MCP.md)**.
 
-Le même moteur d'horaires est exposé aux assistants IA via un serveur MCP distant, gratuit et sans compte :
-`https://bus-seychelles.pages.dev/mcp`. Outils, installation et limites : **[MCP.md](MCP.md)**.
+## Hosting and scaling
 
-## Comment les données ont été créées
+### How it is hosted
 
-La SPTC ne publie **ni flux GTFS, ni API, ni carte des arrêts**. Seuls des PDF d'horaires sont disponibles.
-La base `data/sptc.sqlite` a donc été fabriquée en trois étapes, toutes reproductibles avec `pipeline/run_all.sh`.
+Everything runs on **Cloudflare's free plan**, with no server to administer and no custom domain:
 
-### 1. Horaires : extraction des PDF officiels
+| Piece | Cloudflare service | Role |
+|---|---|---|
+| Pages (`web/public`) | Pages (static assets) | Site, `timetable.json`, FR/EN pages |
+| API and MCP (`web/functions`) | Pages Functions (Workers) | `/api/ask`, `/api/trip`, `/api/stops`, `/mcp` |
+| Question understanding | Workers AI (`AI` binding) | Llama 3.1 8B, only to parse the question |
+| Logs | D1 database `sptc-bus` (`DB` binding) | `query_log` and `mcp_log`, 60-day retention |
 
-* **Source** : les deux PDF de [sptc.sc/timetable](https://sptc.sc/timetable/) (semaine : 85 pages ; week-end : 87 pages),
-  valables au 4 août 2026. Les PDF ne sont **pas** redistribués ici : `pipeline/fetch.sh` les télécharge.
-* **Extraction** (`pipeline/extract.py`) : chaque page contient des tableaux « un tableau par ligne et par sens ».
-  La première ligne du tableau est le titre (`Route 20`, `Route 1 from Victoria`…), la deuxième l'en-tête
-  (les arrêts, dans l'ordre du trajet), les suivantes les trajets. [pdfplumber](https://github.com/jsvine/pdfplumber)
-  détecte les tableaux ; le pied de page est rogné pour éviter qu'il se mélange aux dernières lignes.
-* **Normalisation** (`pipeline/build.py`) :
-  * un tableau peut contenir plusieurs lignes collées ; on découpe à chaque titre `Route …` ;
-  * les doublons (tableaux répétés par le PDF) sont supprimés ;
-  * la page-guide « How to read this timetable » est écartée ;
-  * `-` ou case vide = arrêt non desservi sur ce trajet ;
-  * **un correctif manuel** (page 11 du PDF week-end : les lignes 2C/2D du samedi sont collées en un seul tableau).
-* **Résultat** : ~287 services en semaine (136 lignes), ~276 le week-end (64 lignes), ~2 870 trajets,
-  ~8 070 passages (arrêt + heure).
+Requests are served from Cloudflare's edge network, so there is nothing to keep running. The bindings are declared in
+`web/wrangler.toml`; no API key is stored anywhere. Deployment is one command (`wrangler pages deploy`, see
+[`web/DEPLOY.md`](web/DEPLOY.md)).
 
-Schéma : `services(day_type, route, title, source_page)`, `service_stops(service_id, seq, stop)`,
-`trips(id, service_id, trip_no)`, `stop_times(trip_id, seq, stop, time)`, `stops_geo(stop, lat, lon, osm_name, quality, score)`.
+### Why it already holds up
 
-### 2. Positions des arrêts (partielles)
+* **Timetables are read from memory, not from a database.** `timetable.json` (≈ 350 KB, compressed by Cloudflare) is
+  loaded once per instance and queried in memory. An earlier SQL design read about 150,000 D1 rows per question and
+  exhausted the free daily quota (5 M rows/day); it now reads none.
+* **A fast path skips the AI** for simple questions ("line 20", two known stops), the AI call (~3 s) being the main
+  latency. If the AI quota or model is unavailable, the rule-based parser still answers.
+* **Static content costs nothing in compute**: pages, JSON and trip details (`Cache-Control: public, max-age=3600`)
+  are cached at the edge.
+* **Abuse protection**: per-IP rate limits and a 300-character question cap (best-effort, per instance).
 
-Les PDF donnent des **noms** d'arrêts (« Beau Vallon », « Anse Etoile »…), pas de coordonnées, et il n'existe pas de
-carte officielle. Les positions viennent de sources ouvertes :
+### Where the limits are (free plan)
 
-1. **OpenStreetMap** (`pipeline/geo.py`) : ~1 000 arrêts de bus des Seychelles via l'API Overpass, appariés par
-   ressemblance de nom (`difflib`, seuil 0,88) → qualité `arret_osm` ; sinon avec un lieu OSM (`place=*`) → `lieu_approx`.
-2. **Nominatim** (`pipeline/geo2.py`) : géocodage restreint à Mahé (1 requête/s, selon leur règle d'usage) →
-   `geocode_approx`. Les résultats hors de Mahé sont écartés.
-3. Sinon `inconnu` (pas de position).
+The free-plan figures change over time; check the Cloudflare dashboard. Approximately:
 
-**Couverture réelle : ~45 arrêts sur 155** (environ 60 % des passages). Les noms de la SPTC désignent des villages ;
-ceux d'OSM désignent des arrêts physiques (commerce, lieu-dit) : l'appariement est donc faible. Une position
-« approximative » est celle d'un village ou d'un arrêt voisin, pas de l'arrêt exact. Améliorations bienvenues.
+| Resource | Free plan | What happens when exceeded |
+|---|---|---|
+| Pages Functions / Workers requests | ~100,000 per day | Dynamic requests fail until the daily reset (static files keep being served) |
+| Workers AI | ~10,000 "neurons" per day | The site falls back to the rule-based parser (`via: "rules"`) |
+| D1 | ~5 M rows read, ~100 k rows written per day | Only logging is affected; answers do not depend on D1 |
+
+For a bus app on an island of ~100,000 people, the realistic bottleneck is the **AI quota**, and its failure mode is
+graceful (simpler parsing, never a wrong timetable).
+
+### Scaling up
+
+1. **Stay free, get more headroom**: add a Cloudflare *Rate limiting rule* (Security → WAF) to block abusive IPs
+   before they hit the Functions; cache more API responses at the edge; extend the fast path in
+   `web/functions/_lib/parse.js` so fewer questions need the AI.
+2. **Workers Paid plan (about US$5/month)**: lifts the request cap to millions per month with cheap per-million
+   pricing beyond that, raises D1 limits by orders of magnitude, and bills Workers AI by usage instead of a hard
+   daily quota. No code change is needed: the same project, bindings and `wrangler pages deploy`.
+3. **Custom domain (about €10/year)**: better branding and SEO; Cloudflare Pages supports it directly.
+4. **Beyond that**: because the timetable is a static file and the logic is stateless, load spreads across Cloudflare's
+   edge automatically. The remaining costs would be AI usage and logs; both can be capped (smaller model, shorter log
+   retention, sampling).
+
+## How the data was built
+
+The SPTC publishes **no GTFS feed, no API and no stop map**, only timetable PDFs. The database `data/sptc.sqlite` was
+therefore built in three reproducible steps (`pipeline/run_all.sh`).
+
+### 1. Timetables: extraction from the official PDFs
+
+* **Source**: the two PDFs at [sptc.sc/timetable](https://sptc.sc/timetable/) (weekday: 85 pages; weekend: 87 pages),
+  valid as of 4 August 2026. The PDFs are **not** redistributed here: `pipeline/fetch.sh` downloads them.
+* **Extraction** (`pipeline/extract.py`): each page holds "one table per route and direction" tables. The first row is
+  the title (`Route 20`, `Route 1 from Victoria`…), the second the header (stops, in trip order), the rest are trips.
+  [pdfplumber](https://github.com/jsvine/pdfplumber) detects the tables; the footer is cropped so it does not mix
+  into the last rows.
+* **Normalisation** (`pipeline/build.py`):
+  * a table can hold several glued routes; it is split at each `Route …` title;
+  * duplicates (tables repeated by the PDF) are removed;
+  * the "How to read this timetable" guide page is dropped;
+  * `-` or an empty cell = stop not served on that trip;
+  * **one manual fix** (page 11 of the weekend PDF: Saturday routes 2C/2D are glued into a single table).
+* **Result**: ~287 services on weekdays (136 routes), ~276 at weekends (64 routes), ~2,870 trips, ~8,070 stop times.
+
+Schema: `services(day_type, route, title, source_page)`, `service_stops(service_id, seq, stop)`,
+`trips(id, service_id, trip_no)`, `stop_times(trip_id, seq, stop, time)`,
+`stops_geo(stop, lat, lon, osm_name, quality, score)`.
+
+### 2. Stop positions (partial)
+
+The PDFs give stop **names** ("Beau Vallon", "Anse Etoile"…), not coordinates, and there is no official map. Positions
+come from open sources:
+
+1. **OpenStreetMap** (`pipeline/geo.py`): ~1,000 Seychelles bus stops via the Overpass API, matched by name similarity
+   (`difflib`, threshold 0.88) → quality `arret_osm`; otherwise to an OSM place (`place=*`) → `lieu_approx`.
+2. **Nominatim** (`pipeline/geo2.py`): geocoding restricted to Mahé (1 request/s, per their usage policy) →
+   `geocode_approx`. Results outside Mahé are discarded.
+3. Otherwise `inconnu` (no position).
+
+**Actual coverage: ~45 stops out of 155** (about 60% of departures). SPTC names designate villages while OSM names
+designate physical stops (shop, locality), so matching is weak. An "approximate" position is that of a village or a
+neighbouring stop, not the exact stop. Improvements welcome.
 
 ### 3. Publication
 
-`web/schema.sql` (copie de `data/sptc.sqlite`) sert à générer `web/public/timetable.json` (`pipeline/make_schema.py`),
-que le site et le serveur MCP (fonctions Cloudflare Pages, `web/functions/`) interrogent en mémoire. Voir `web/DEPLOY.md`.
+`web/schema.sql` (a copy of `data/sptc.sqlite`) is used to generate `web/public/timetable.json`
+(`pipeline/make_schema.py`), which the site and the MCP server (Cloudflare Pages Functions, `web/functions/`) query in
+memory. See `web/DEPLOY.md`.
 
-### Limites connues
+### Known limitations
 
-* Pas de temps réel (retards, annulations), pas d'itinéraire avec correspondance.
-* Les notes des PDF (ex. « tous les mardis la 1D part à 13h20 ») ne sont pas importées.
-* Week-end = samedi et dimanche confondus (certains titres précisent « Saturday »).
-* Colonnes irrégulières dans quelques tableaux : certaines lignes secondaires peuvent être décalées.
-* Les PDF changent (nouveaux horaires en juillet 2025, mai 2026, août 2026…) : relancer `run_all.sh`.
+* No real time (delays, cancellations); no multi-leg journey planning beyond simple transfers.
+* Notes in the PDFs (e.g. "every Tuesday the 1D leaves at 1:20pm") are not imported.
+* Weekend = Saturday and Sunday merged (some titles specify "Saturday").
+* Irregular columns in a few tables: some secondary routes may be shifted.
+* The PDFs change (new timetables in July 2025, May 2026, August 2026…): re-run `run_all.sh`.
 
-## Contact et signalement d'erreurs
+## Contact and reporting errors
 
-Pour signaler un horaire faux, une question mal comprise ou pour toute demande (y compris de la SPTC) :
-[ouvrir une issue](https://github.com/francoistll/sptc-bus-mcp/issues/new) sur ce dépôt (un compte GitHub est nécessaire).
-Ce service est une intégration **non officielle**, non affiliée à la SPTC.
+To report a wrong time, a misunderstood question, or for any request (including from the SPTC):
+[open an issue](https://github.com/francoistll/sptc-bus-mcp/issues/new) on this repository (a GitHub account is required).
+This service is an **unofficial** integration, not affiliated with the SPTC.
 
-## Crédits et licences
+## Credits and licences
 
-* **Code** : MIT (voir `LICENSE`).
-* **Horaires** : © SPTC — Seychelles Public Transport Corporation, <https://sptc.sc>. Données factuelles
-  réorganisées pour usage personnel et d'information ; les PDF d'origine ne sont pas redistribués. En cas de
-  demande de la SPTC, la base sera retirée ou mise à jour.
-* **Positions** : © contributeurs [OpenStreetMap](https://www.openstreetmap.org/copyright), licence
-  [ODbL](https://opendatacommons.org/licenses/odbl/) ; géocodage par [Nominatim](https://nominatim.org/).
-  La table `stops_geo` est une base dérivée : elle reste sous ODbL.
+* **Code**: MIT (see `LICENSE`).
+* **Timetables**: © SPTC — Seychelles Public Transport Corporation, <https://sptc.sc>. Factual data reorganised for
+  personal and informational use; the original PDFs are not redistributed. If the SPTC asks, the database will be
+  removed or updated.
+* **Positions**: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, licence
+  [ODbL](https://opendatacommons.org/licenses/odbl/); geocoding by [Nominatim](https://nominatim.org/).
+  The `stops_geo` table is a derived database and remains under ODbL.

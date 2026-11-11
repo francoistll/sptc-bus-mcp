@@ -1,46 +1,46 @@
-# Serveur MCP — horaires des bus SPTC (Mahé, Seychelles)
+# MCP server — SPTC bus timetables (Mahé, Seychelles)
 
-Serveur [MCP](https://modelcontextprotocol.io) qui permet à une IA (Claude, Cursor…) d'interroger les horaires des bus de la
-**Seychelles Public Transport Corporation (SPTC)** : « quels sont les prochains bus de Victoria à Beau Vallon ? ».
-C'est la deuxième facette du projet ; l'application web est décrite dans le [README principal](README.md).
+A remote [MCP](https://modelcontextprotocol.io) server that lets an AI assistant (Claude, Cursor…) query the bus
+timetables of the **Seychelles Public Transport Corporation (SPTC)**: "what are the next buses from Victoria to Beau
+Vallon?". This is the second half of the project; the web app is described in the [main README](README.md).
 
-*English: a remote MCP server exposing SPTC (Seychelles) bus timetables to AI assistants. Read-only, no account, scheduled times only (no real-time data).*
+> ⚠️ **Scheduled times only, no real-time data**, extracted automatically from the official PDFs. Errors are possible:
+> check [sptc.sc/timetable](https://sptc.sc/timetable/). Unofficial service, not affiliated with the SPTC.
 
-> ⚠️ **Horaires théoriques, sans temps réel**, extraits automatiquement des PDF officiels. Des erreurs sont possibles :
-> vérifiez sur [sptc.sc/timetable](https://sptc.sc/timetable/). Service non officiel, non affilié à la SPTC.
+## Connecting
 
-## Connexion
+URL: `https://bus-seychelles.pages.dev/mcp` (Streamable HTTP, stateless, read-only, no authentication, free).
+Detailed instructions: https://bus-seychelles.pages.dev/en/claude (French: `/claude`).
 
-URL : `https://bus-seychelles.pages.dev/mcp` (Streamable HTTP, sans état, lecture seule, sans authentification, gratuit).
-Mode d'emploi détaillé : https://bus-seychelles.pages.dev/claude (anglais : `/en/claude`).
-
-* **Claude** : Personnaliser → Connecteurs → *Ajouter un connecteur personnalisé* → coller l'URL.
-* **Claude Code** :
+* **Claude**: Customize → Connectors → *Add custom connector* → paste the URL.
+* **Claude Code**:
   ```bash
   claude mcp add --transport http bus-seychelles https://bus-seychelles.pages.dev/mcp
   ```
-* **Autres clients** (Cursor…) : serveur MCP distant de type HTTP avec la même URL.
+* **Other clients** (Cursor…): a remote HTTP MCP server with the same URL.
 
-## Outils exposés
+## Tools
 
-| Outil | Rôle |
+| Tool | Purpose |
 |---|---|
-| `chercher_arret(nom)` | Arrêts dont le nom contient `nom`, avec position GPS quand elle existe |
-| `prochains_passages(depart, arrivee?, apres?, jour?, limite?)` | Prochains bus au départ d'un arrêt, éventuellement vers une destination. Sans `apres`, utilise l'heure actuelle aux Seychelles (UTC+4). `jour` = `semaine` ou `weekend` |
-| `horaires_ligne(ligne, jour?)` | Grille complète d'une ligne (ex. `20`, `22`, `24A`), par sens |
+| `chercher_arret(nom)` | Stops whose name contains `nom`, with GPS position when known |
+| `prochains_passages(depart, arrivee?, apres?, jour?, limite?)` | Next buses leaving a stop, optionally towards a destination. Without `apres`, uses the current Seychelles time (UTC+4). `jour` = `semaine` (weekday) or `weekend` |
+| `horaires_ligne(ligne, jour?)` | Full timetable of a route (e.g. `20`, `22`, `24A`), by direction |
 
-Conseil d'usage : `chercher_arret` pour retrouver le nom exact d'un arrêt, puis `prochains_passages` ou `horaires_ligne`.
+Tip: use `chercher_arret` to find a stop's exact name, then `prochains_passages` or `horaires_ligne`. Tool names and
+parameters are in French, as are the stop names used by the SPTC.
 
-## Implémentation et limites
+## Implementation and limits
 
-* Code : `web/functions/mcp.js`, sur Cloudflare Pages Functions. Les horaires viennent de `web/public/timetable.json`,
-  interrogé en mémoire (même moteur que le site, `web/functions/_lib/query.js`).
-* Limite : 60 requêtes par minute et par IP (approximatif).
-* Journal `mcp_log` (D1) : outil appelé, arguments tronqués et IP, conservés 60 jours, annoncé dans la page `/claude`.
-* Pas de temps réel (retards, annulations) ; correspondances non gérées par le MCP.
-* Origine et limites des données : voir le [README principal](README.md#comment-les-données-ont-été-créées).
+* Code: `web/functions/mcp.js`, running as Cloudflare Pages Functions. Times come from `web/public/timetable.json`,
+  queried in memory (same engine as the site, `web/functions/_lib/query.js`).
+* Rate limit: 60 requests per minute per IP (approximate, per instance).
+* `mcp_log` (D1): tool called, truncated arguments and IP address, kept 60 days, disclosed on the `/claude` page.
+* No real time (delays, cancellations); the MCP tools do not plan transfers.
+* Origin and limits of the data: see the [main README](README.md#how-the-data-was-built).
+* Hosting and scaling: see [Hosting and scaling](README.md#hosting-and-scaling).
 
 ## Contact
 
-Horaire faux ou demande : [ouvrir une issue](https://github.com/francoistll/sptc-bus-mcp/issues/new). Service **non officiel**.
-Code sous licence MIT ; horaires © SPTC (voir le README principal).
+Wrong time or any request: [open an issue](https://github.com/francoistll/sptc-bus-mcp/issues/new). **Unofficial**
+service. Code under MIT licence; timetables © SPTC (see the main README).

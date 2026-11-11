@@ -1,44 +1,48 @@
-# Déployer le site « Bus Seychelles » sur Cloudflare (gratuit)
+# Deploying "Bus Seychelles" on Cloudflare (free)
 
-Le site est une page statique (`public/`) + une fonction (`functions/api/ask.js`) + une base D1 (`schema.sql`)
-+ le LLM gratuit Workers AI. Tout tient dans un compte Cloudflare gratuit, sans nom de domaine
-(URL `https://bus-seychelles.pages.dev`). Les quotas gratuits changent : vérifiez-les dans le tableau de bord.
+The site is a static page (`public/`) + Pages Functions (`functions/`) + a D1 database (logs, `logging.sql`; the
+timetables themselves are the static file `public/timetable.json`) + the free Workers AI LLM. It all fits in a free
+Cloudflare account, with no domain name (URL `https://bus-seychelles.pages.dev`). Free quotas change: check them in
+the dashboard. For the hosting overview and scaling options, see the "Hosting and scaling" section of the
+[main README](../README.md#hosting-and-scaling).
 
-Prérequis : un compte Cloudflare et Node.js (≥ 18) sur votre ordinateur.
+Prerequisites: a Cloudflare account and Node.js (≥ 18) on your computer.
 
 ```bash
 cd web
-npx wrangler login                          # ouvre le navigateur : vous vous connectez vous-même
+npx wrangler login                          # opens the browser: you sign in yourself
 
-# 1. Base de données
-npx wrangler d1 create sptc-bus             # affiche un database_id → le coller dans wrangler.toml
-npx wrangler d1 execute sptc-bus --remote --file=schema.sql   # ~13 500 instructions, ~750 Ko
+# 1. Database (logs)
+npx wrangler d1 create sptc-bus             # prints a database_id → paste it into wrangler.toml
+npx wrangler d1 execute sptc-bus --remote --file=logging.sql   # query_log and mcp_log tables
 
-# 2. Projet Pages + déploiement
+# 2. Pages project + deployment
 npx wrangler pages project create bus-seychelles --production-branch=main
 npx wrangler pages deploy public --project-name=bus-seychelles
 ```
 
-Les liaisons `DB` (D1) et `AI` (Workers AI) viennent de `wrangler.toml`. Si elles n'apparaissent pas :
-tableau de bord → Workers & Pages → bus-seychelles → Settings → Bindings → ajouter **D1 database** (`DB` → `sptc-bus`)
-et **Workers AI** (`AI`), puis redéployer.
+The `DB` (D1) and `AI` (Workers AI) bindings come from `wrangler.toml`. If they do not appear: dashboard →
+Workers & Pages → bus-seychelles → Settings → Bindings → add **D1 database** (`DB` → `sptc-bus`) and
+**Workers AI** (`AI`), then redeploy.
 
-## Vérifier
+## Checking
 
 ```bash
 curl -s -X POST https://bus-seychelles.pages.dev/api/ask -H 'content-type: application/json' \
-  -d '{"q":"prochain bus de Victoria à Beau Vallon après 16h"}'
+  -d '{"q":"next bus from Victoria to Beau Vallon after 4pm"}'
 ```
 
-Attendu : du JSON avec `"intent":"next"` et des lignes (22, 20, 22E, 24A…).
+Expected: JSON with `"intent":"next"` and rows (routes 22, 20, 22E, 24A…).
 
-## Bon à savoir
+## Good to know
 
-* **Protection anti-abus** : la fonction limite à 12 requêtes/minute/IP (par instance) et à 300 caractères.
-  Pour une vraie limite : tableau de bord → Security → WAF → *Rate limiting rules*.
-* **Si le quota de l'IA est épuisé**, la fonction bascule sur une analyse par règles (`via: "rules"`) : le site
-  continue de répondre aux formulations simples (« de X à Y », « ligne 20 »).
-* **Mettre à jour les horaires** : relancer `pipeline/run_all.sh`, régénérer `web/schema.sql`
-  (voir `pipeline/make_schema.py`), puis `wrangler d1 execute sptc-bus --remote --file=schema.sql` après avoir vidé les tables.
-* **Lien « Code source »** : renseigner `REPO` en haut du script de `public/index.html`.
-* **Aucune clé API** n'est nécessaire : Workers AI est lié au projet par `wrangler.toml`.
+* **Abuse protection**: the function limits requests per IP (per instance, best-effort) and questions to 300
+  characters. For a real limit: dashboard → Security → WAF → *Rate limiting rules*.
+* **If the AI quota is exhausted**, the function falls back to rule-based parsing (`via: "rules"`): the site keeps
+  answering simple phrasings ("from X to Y", "line 20").
+* **Updating the timetables**: re-run `pipeline/run_all.sh`, then `python pipeline/make_schema.py` (regenerates
+  `web/schema.sql` and `web/public/timetable.json`), and redeploy. `timetable.json` is what the site reads; D1 is not
+  involved in timetables. Never touch `query_log` / `mcp_log`.
+* **"Source code" link**: set `REPO` at the top of the script in `public/index.html`.
+* **No API key** is needed: Workers AI is bound to the project through `wrangler.toml`.
+* **Scaling**: see the main README (free-plan limits, Workers Paid plan, custom domain).
