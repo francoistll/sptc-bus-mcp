@@ -1,27 +1,39 @@
-# sptc-bus-mcp — horaires des bus SPTC (Mahé, Seychelles) pour Claude
+# Bus Seychelles — horaires des bus SPTC (Mahé, Seychelles)
 
-Serveur [MCP](https://modelcontextprotocol.io) qui permet à une IA d'interroger les horaires des bus de la
-**Seychelles Public Transport Corporation (SPTC)** : « quels sont les prochains bus de Victoria à Beau Vallon ? ».
+Projet **non officiel** autour des horaires de la **Seychelles Public Transport Corporation (SPTC)**, qui ne publie que
+des PDF (ni GTFS, ni API). Il les transforme en données exploitables et les propose de deux façons :
 
-*English summary: an MCP server exposing SPTC (Seychelles) bus timetables, built by parsing the official PDF
-timetables into SQLite. No official GTFS feed exists. Scheduled times only, no real-time data.*
+| | Pour qui | Où |
+|---|---|---|
+| 🌐 **Application web** | Tout le monde : question en langage naturel (« prochain bus de Victoria à Beau Vallon après 16h »), arrêts proches, trajets fréquents, correspondances, FR/EN, mobile | https://bus-seychelles.pages.dev |
+| 🤖 **Serveur MCP** | Assistants IA (Claude, Cursor…) | `https://bus-seychelles.pages.dev/mcp` — voir [MCP.md](MCP.md) |
+
+*English: an unofficial web app (natural-language questions, nearby stops, transfers, FR/EN) and a public MCP server for AI assistants, both built from the official SPTC PDF timetables. Scheduled times only, no real-time data.*
 
 > ⚠️ **Horaires théoriques, sans temps réel.** Données SPTC valables au **4 août 2026**, extraites automatiquement
 > de PDF. Des erreurs sont possibles : vérifiez sur [sptc.sc/timetable](https://sptc.sc/timetable/) ou aux arrêts.
 > Projet non officiel, non affilié à la SPTC.
 
-## Outils exposés
+## Application web — `web/`
 
-| Outil | Rôle |
-|---|---|
-| `chercher_arret(nom)` | Arrêts dont le nom contient `nom`, avec position GPS quand elle existe |
-| `prochains_passages(depart, arrivee?, apres?, jour?, limite?)` | Prochains bus au départ d'un arrêt, éventuellement vers une destination. Sans `apres`, utilise l'heure actuelle aux Seychelles (UTC+4). `jour` = `semaine` ou `weekend` |
-| `horaires_ligne(ligne, jour?)` | Grille complète d'une ligne (ex. `20`, `22`, `24A`), par sens |
+**En ligne : https://bus-seychelles.pages.dev** (hébergée gratuitement sur Cloudflare Pages).
 
-## Utilisation
+Une page avec un champ en langage naturel, des exemples cliquables, la documentation et la source des données (liens
+vers les PDF officiels, mention « Service non officiel »). Bilingue (`/` en français, `/en/` en anglais), optimisée mobile.
 
-**Serveur MCP public, gratuit, sans compte** : `https://bus-seychelles.pages.dev/mcp`. Mode d'emploi (Claude, Claude Code, Cursor…) :
-https://bus-seychelles.pages.dev/claude — dans Claude : Personnaliser → Connecteurs → *Ajouter un connecteur personnalisé* → coller l'URL.
+* Une IA gratuite (Cloudflare Workers AI) ne sert qu'à **comprendre la question** ; les horaires viennent toujours des
+  données officielles : l'IA n'en invente jamais. Sans quota IA, une analyse par règles prend le relais.
+* Les horaires sont servis en JSON statique (`web/public/timetable.json`) et interrogés en mémoire ; la base D1 ne
+  sert qu'aux journaux (60 jours, sans IP pour le site).
+* Personnalisation uniquement dans le navigateur (`localStorage`) : arrêts proches (la position ne quitte jamais l'appareil),
+  trajets fréquents, bouton « Effacer ma mémoire ».
+
+Déploiement pas à pas : [`web/DEPLOY.md`](web/DEPLOY.md) · entretien : [`web/MAINTENANCE.md`](web/MAINTENANCE.md).
+
+## Serveur MCP
+
+Le même moteur d'horaires est exposé aux assistants IA via un serveur MCP distant, gratuit et sans compte :
+`https://bus-seychelles.pages.dev/mcp`. Outils, installation et limites : **[MCP.md](MCP.md)**.
 
 ## Comment les données ont été créées
 
@@ -63,10 +75,10 @@ carte officielle. Les positions viennent de sources ouvertes :
 ceux d'OSM désignent des arrêts physiques (commerce, lieu-dit) : l'appariement est donc faible. Une position
 « approximative » est celle d'un village ou d'un arrêt voisin, pas de l'arrêt exact. Améliorations bienvenues.
 
-### 3. Serveur
+### 3. Publication
 
-Le site et le serveur MCP sont des fonctions Cloudflare Pages (`web/functions/`) qui lisent la même base D1, copie de `data/sptc.sqlite`
-(`web/schema.sql`). Voir `web/DEPLOY.md`.
+`web/schema.sql` (copie de `data/sptc.sqlite`) sert à générer `web/public/timetable.json` (`pipeline/make_schema.py`),
+que le site et le serveur MCP (fonctions Cloudflare Pages, `web/functions/`) interrogent en mémoire. Voir `web/DEPLOY.md`.
 
 ### Limites connues
 
@@ -76,27 +88,11 @@ Le site et le serveur MCP sont des fonctions Cloudflare Pages (`web/functions/`)
 * Colonnes irrégulières dans quelques tableaux : certaines lignes secondaires peuvent être décalées.
 * Les PDF changent (nouveaux horaires en juillet 2025, mai 2026, août 2026…) : relancer `run_all.sh`.
 
-## Site web public (sans MCP) — `web/`
-
-**En ligne : https://bus-seychelles.pages.dev** (intégration non officielle, hébergée sur Cloudflare Pages).
-
-Une page « Bus Seychelles » avec un textarea en langage naturel, des exemples cliquables, la documentation et la
-source des données (liens vers les PDF officiels, mention « intégration non officielle »), bilingue FR/EN et
-optimisée mobile. Une IA gratuite (Cloudflare Workers AI) ne sert qu'à **comprendre la question** ; les horaires
-viennent toujours de la base D1 : l'IA n'en invente jamais. Sans quota IA, une analyse par règles prend le relais.
-Déploiement gratuit pas à pas : [`web/DEPLOY.md`](web/DEPLOY.md).
-
 ## Contact et signalement d'erreurs
 
 Pour signaler un horaire faux, une question mal comprise ou pour toute demande (y compris de la SPTC) :
 [ouvrir une issue](https://github.com/francoistll/sptc-bus-mcp/issues/new) sur ce dépôt (un compte GitHub est nécessaire).
 Ce service est une intégration **non officielle**, non affiliée à la SPTC.
-
-## Serveur MCP public (même domaine que le site)
-
-`https://bus-seychelles.pages.dev/mcp` : serveur MCP distant (Streamable HTTP, sans état, lecture seule, sans authentification) qui interroge la même base D1 que le site
-(`web/functions/mcp.js`). Outils : `chercher_arret`, `prochains_passages`, `horaires_ligne`. Mode d'emploi pour Claude : https://bus-seychelles.pages.dev/claude
-(Claude Code : `claude mcp add --transport http bus-seychelles https://bus-seychelles.pages.dev/mcp`). Limite : 60 requêtes/minute/IP. Service **non officiel**.
 
 ## Crédits et licences
 
