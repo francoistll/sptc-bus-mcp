@@ -1,6 +1,6 @@
 // Interprétation de la question : LLM (Workers AI) en premier, analyse par règles en secours.
-// Le LLM (8 B) invente facilement un jour, une heure ou une ligne : tout ce qu'il renvoie est revérifié contre le texte de la question.
-const MODEL = '@cf/meta/llama-3.1-8b-instruct-fp8';
+// Le LLM invente facilement un jour, une heure ou une ligne : tout ce qu'il renvoie est revérifié contre le texte de la question.
+const MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast'; // llama-3.1-8b-instruct-fp8 retiré par Cloudflare le 2026-11-20
 
 const clean = (s) => (typeof s === 'string' ? s.trim().slice(0, 60) || null : null);
 const norm = (s) => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
@@ -163,7 +163,9 @@ export async function parseQuestion(env, question, stops) {
       max_tokens: 200,
       temperature: 0,
     });
-    const text = typeof r === 'string' ? r : r?.response || '';
+    // Selon le modèle, `response` est du texte ou un objet JSON déjà décodé.
+    const resp = typeof r === 'string' ? r : r?.response;
+    const text = resp && typeof resp === 'object' ? JSON.stringify(resp) : String(resp || '');
     const a = text.indexOf('{'), b = text.lastIndexOf('}');
     if (a < 0 || b <= a) throw new Error('pas de JSON');
     const p = sanitize(JSON.parse(text.slice(a, b + 1)));
