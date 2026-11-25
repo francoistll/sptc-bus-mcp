@@ -84,7 +84,13 @@ export function parseByRules(q, stops = []) {
 
   if (found.length >= 2) {
     let [a, b] = found;
+    // Mot placé juste avant chaque arrêt (articles sautés) : « pour Victoria depuis Beau Vallon », « vers X de Y ».
+    const nt = ' ' + norm(t) + ' ';
+    const prev = (s) => (nt.slice(0, s.i).trim().split(' ').filter((w) => !/^(?:la|le|les|l|the)$/.test(w)).pop() || '');
+    const isFrom = (s) => /^(?:depuis|from)$/.test(prev(s));
+    const isTo = (s) => /^(?:to|vers|pour|a|au|aux|jusqu)$/.test(prev(s));
     if (toWord >= 0 && fromWord > toWord && /(?<![\wÀ-ÿ])to\s/i.test(t)) [a, b] = [b, a]; // « to Victoria from Beau Vallon »
+    else if ((isFrom(b) && !isFrom(a)) || (isTo(a) && /^(?:de|d)$/.test(prev(b)))) [a, b] = [b, a];
     out.intent = 'next'; out.depart = a.stop; out.arrivee = b.stop;
     return out;
   }
